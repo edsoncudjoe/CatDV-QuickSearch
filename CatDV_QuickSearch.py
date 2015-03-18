@@ -8,7 +8,7 @@ from CatDVlib import Cdvlib
 root = Tk()
 root.title('CatDV QuickSearch')
 cdv = Cdvlib()
-cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
+#cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
 
 def c_login():
 	try:
@@ -20,13 +20,17 @@ def c_login():
 		cdv.key = data['data']['jsessionid']
 		result.insert(END, "Login successful")	
 	except TypeError:
-		tkMessageBox.showwarning("Error", "You provided incorrect login details.\n"
+		tkMessageBox.showwarning("Login Error", "You provided incorrect login details.\n"
 			"Please check and try again.")
 	except requests.exceptions.ConnectTimeout as e:
-		print "The server connection timed-out.", e
+		tkMessageBox.showwarning("Server Error", "The server connection timed-out.")
+		print(e)
 	except requests.exceptions.ConnectionError as e:
-		print('\nCan\'t access the API.'
+		tkMessageBox.showwarning("Connection Error",'\nCan\'t access the API.'
 			' Please check you have the right domain address')
+		print(e)
+	except ValueError:
+		tkMessageBox.showwarning("","There was an error accessing the CatDV Server.")
 
 def query():
 	count = 0
@@ -46,7 +50,7 @@ def query():
 			pass
 	else:
 		if count == 0:
-			result.insert(END, "No files found.")
+			tkMessageBox.showwarning("", "No files found.")
 
 def clear_text():
 	result.delete(0, END)
