@@ -8,13 +8,14 @@ from CatDVlib import Cdvlib
 root = Tk()
 root.title('CatDV QuickSearch')
 cdv = Cdvlib()
+cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
 
 def c_login():
 	try:
 		usr = usernm.get()
 		pwd = passwrd.get()
 		auth = cdv.url + "/session?usr=" + str(usr) + "&pwd=" + str(pwd)
-		response = requests.get(auth)
+		response = requests.get(auth, timeout=5)
 		data = json.loads(response.text)
 		cdv.key = data['data']['jsessionid']
 		result.insert(END, "Login successful")	
@@ -22,7 +23,7 @@ def c_login():
 		tkMessageBox.showwarning("Error", "You provided incorrect login details.\n"
 			"Please check and try again.")
 	except requests.exceptions.ConnectTimeout as e:
-		print "The server connection timed-out."
+		print "The server connection timed-out.", e
 	except requests.exceptions.ConnectionError as e:
 		print('\nCan\'t access the API.'
 			' Please check you have the right domain address')
@@ -116,6 +117,11 @@ clr_btn.grid(row=1, column=0, sticky=E)
 
 button = tk.Button(util_btns, text="QUIT", command=login.quit)
 button.grid(row=1, column=1, sticky=E)
+
+
+#fileMenu = Menu(root, tearoff=0)
+#fileMenu.add_command(label="Exit")
+#root.add_cascade(label="File", menu=fileMenu)
 
 root.mainloop()
 root.destroy()
