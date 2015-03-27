@@ -1,8 +1,10 @@
+import sys
 from Tkinter import *
 import ttk as tk
 import tkMessageBox
 import requests
 import json
+sys.path.insert(0, '/Users/Edit4/Documents/Edson/py-catdv')
 from CatDVlib import Cdvlib
 
 root = Tk()
