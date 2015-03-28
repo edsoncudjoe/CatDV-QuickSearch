@@ -4,7 +4,8 @@ import ttk as tk
 import tkMessageBox
 import requests
 import json
-sys.path.insert(0, '/Users/Edit4/Documents/Edson/py-catdv')
+#sys.path.insert(0, '/Users/Edit4/Documents/Edson/py-catdv')
+sys.path.insert(0, '/home/nosle3p/Documents/Python/repos/Py-Catdv')
 from CatDVlib import Cdvlib
 
 root = Tk()
