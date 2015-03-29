@@ -5,13 +5,13 @@ import tkMessageBox
 import requests
 import json
 #sys.path.insert(0, '/Users/Edit4/Documents/Edson/py-catdv')
-sys.path.insert(0, '/home/nosle3p/Documents/Python/repos/Py-Catdv')
+sys.path.insert(0, '../Py-CatDV')
 from CatDVlib import Cdvlib
 
 root = Tk()
 root.title('CatDV QuickSearch')
 cdv = Cdvlib()
-#cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
+cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
 
 def c_login():
 	try:
@@ -41,6 +41,7 @@ def query():
 	res = requests.get(cdv.url + "/clips;jsessionid=" + cdv.key + "?filter=and"
 		"((clip.name)like({}))&include=userFields".format(str(entry)))
 	data = json.loads(res.text)
+	clear_text()
 	for i in data['data']['items']:
 		try:
 			if i['userFields']['U7']:
@@ -55,6 +56,16 @@ def query():
 		if count == 0:
 			tkMessageBox.showwarning("", "No files found.")
 
+def enter_query(event):
+	query()
+	return 
+
+def enter_login(event):
+	print "logging in..."
+	result.insert(END, "Attempting login...")
+	c_login()
+	return
+
 def clear_text():
 	result.delete(0, END)
 
@@ -63,6 +74,14 @@ def deleteSession():
 	clear_text()
 	result.insert(END, "You have logged out.")
 	return requests.delete(cdv.url + '/session')
+
+def about():
+	tkMessageBox.showinfo("Mortgage Monthly Payment Calculator",
+		"\nCatDV QuickSearch\n\n"
+		"\nCreated by E.Cudjoe"
+		"\nVersion 1.0"
+		"\nCopyright " + u"\u00A9" + " 2014-2015 E.cudjoe"
+		"\nhttps://github.com/edsondudjoe")
 
 
 main = tk.Frame(root)
@@ -80,34 +99,68 @@ res_list.grid(sticky=W, padx=5, pady=5)
 util_btns = tk.Frame(main)
 util_btns.grid(sticky=S+E, padx=5, pady=2)
 
+######## MENU BAR #########
+menubar = Menu(main)
+filemenu = Menu(menubar, tearoff=0,)
+root.config(menu=menubar)
+
+# File
+menubar.add_cascade(label="File", menu=filemenu)
+filemenu.add_command(label="Login", command=c_login)
+filemenu.add_command(label="Search", command=query)
+# File > Export
+exportmenu = Menu(filemenu, tearoff=0)
+filemenu.add_cascade(label="Export", menu=exportmenu, state="disabled")
+exportmenu.add_command(label="as Spreadsheet")
+exportmenu.add_command(label="as Text")
+# File
+filemenu.add_command(label="Print", state="disabled")
+filemenu.add_command(label="Clear", command=clear_text)
+filemenu.add_command(label="Logout", command=deleteSession)
+filemenu.add_command(label="Quit", command=login.quit)
+
+# Edit
+editmenu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Edit", menu=editmenu)
+editmenu.add_command(label="Select All", state="disabled")
+editmenu.add_command(label="Copy", state="disabled")
+
+# Help
+helpmenu = Menu(menubar, tearoff=0)
+menubar.add_cascade(label="Help", menu=helpmenu)
+helpmenu.add_command(label="About", command=about)
+
+
 ######## USER LOGIN #######
 usrn = tk.Label(login, text="username: ")
 usrn.grid(row=0, column=0)
 
 usernm = StringVar() 
 usr_ent = tk.Entry(login, textvariable=usernm)
-usr_ent.grid(row=0, column=1)
+usr_ent.grid(row=0, column=1, padx=2)
 
 pwd = tk.Label(login, text="password: ")
-pwd.grid(row=0, column=2)
+pwd.grid(row=0, column=2, padx=2)
 
 passwrd = StringVar()
 pwd_ent = tk.Entry(login, textvariable=passwrd, show="*")
-pwd_ent.grid(row=0, column=3)
+pwd_ent.bind("<Return>", enter_login)
+pwd_ent.grid(row=0, column=3, padx=2)
 
 login_btn = tk.Button(login, text="LOGIN", command=c_login)
-login_btn.grid(row=0, column=4)
+login_btn.grid(row=0, column=4, padx=2)
 
 logout_btn = tk.Button(login, text="LOG OUT", command=deleteSession)
-logout_btn.grid(row=0, column=5)
+logout_btn.grid(row=0, column=5, padx=2)
 
 ######## USER SEARCH ENTRY ######
 term = StringVar() 
 clip = tk.Entry(usr_search, width="90", textvariable=term)
-clip.grid(row=0, column=0, sticky=E)
+clip.bind("<Return>", enter_query)
+clip.grid(row=0, column=0, sticky=E, padx=2)
 
 search_btn = tk.Button(usr_search, text="SEARCH", command=query)
-search_btn.grid(row=0, column=1, sticky=E)
+search_btn.grid(row=0, column=1, sticky=E, padx=2)
 
 ####### RESULTS ###########
 scrollbar = tk.Scrollbar(res_list)
@@ -120,10 +173,10 @@ scrollbar.config(command=result.yview)
 result.config(yscrollcommand=scrollbar.set)
 
 clr_btn = tk.Button(util_btns, text="Clear", command=clear_text)
-clr_btn.grid(row=1, column=0, sticky=E)
+clr_btn.grid(row=1, column=0, sticky=E, pady=2, padx=2)
 
 button = tk.Button(util_btns, text="QUIT", command=login.quit)
-button.grid(row=1, column=1, sticky=E)
+button.grid(row=1, column=1, sticky=E, pady=2, padx=2)
 
 
 #fileMenu = Menu(root, tearoff=0)
