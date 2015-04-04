@@ -4,24 +4,24 @@ import ttk as tk
 import tkMessageBox
 import requests
 import json
-#sys.path.insert(0, '/Users/Edit4/Documents/Edson/py-catdv')
+#sys.path.insert(0, '../py-catdv') # IV local
 sys.path.insert(0, '../Py-CatDV')
 from CatDVlib import Cdvlib
 
 root = Tk()
 root.title('CatDV QuickSearch')
 cdv = Cdvlib()
-cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
+cdv.url = "http://mam.intervideo.co.uk:8080/api/4" #external access only
 
 def c_login():
 	try:
 		usr = usernm.get()
 		pwd = passwrd.get()
-		auth = cdv.url + "/session?usr=" + str(usr) + "&pwd=" + str(pwd)
-		response = requests.get(auth, timeout=5)
-		data = json.loads(response.text)
-		cdv.key = data['data']['jsessionid']
-		result.insert(END, "Login successful")	
+		
+		auth = cdv.setAuth(str(usr), str(pwd))
+		key = cdv.getSessionKey()
+		if key:
+			result.insert(END, "Login successful")
 	except TypeError:
 		tkMessageBox.showwarning("Login Error", "You provided incorrect login details.\n"
 			"Please check and try again.")
@@ -37,24 +37,33 @@ def c_login():
 
 def query():
 	count = 0
-	entry = term.get()
-	res = requests.get(cdv.url + "/clips;jsessionid=" + cdv.key + "?filter=and"
-		"((clip.name)like({}))&include=userFields".format(str(entry)))
-	data = json.loads(res.text)
-	clear_text()
-	for i in data['data']['items']:
+	entry = str(term.get())
+	if entry:
 		try:
-			if i['userFields']['U7']:
-				count += 1
-				result.insert(END, i['userFields']['U7'] + '  ' + i['name'])        
+			res = requests.get(cdv.url + "/clips;jsessionid=" + cdv.key + "?filter=and"
+				"((clip.name)like({}))&include=userFields".format(entry))
+			data = json.loads(res.text)
+			clear_text()
+			for i in data['data']['items']:
+				try:
+					if i['userFields']['U7']:
+						count += 1
+						result.insert(END, i['userFields']['U7'] + '    ' + i['name'])       
+					else:
+						count += 1
+						result.insert(END, i['name'])
+				except TypeError, e: # For files with no LTO number.
+					print("File not on LTO: {}".format(i['name']))
+				except KeyError:
+					pass
 			else:
-				count += 1
-				result.insert(END, i['name'])
-		except KeyError:
-			pass
-	else:
-		if count == 0:
+				if count == 0:
+					raise ValueError
+				#tkMessageBox.showwarning("", "No files found.")
+		except ValueError: # catches JSON errors where symbols have been entered.
 			tkMessageBox.showwarning("", "No files found.")
+	else:
+		tkMessageBox.showwarning("", "Enter name of the title in the search bar")
 
 def enter_query(event):
 	query()
@@ -72,12 +81,16 @@ def clear_text():
 def deleteSession():
 	"""HTTP delete call to the API"""
 	clear_text()
-	result.insert(END, "You have logged out.")
-	return requests.delete(cdv.url + '/session')
+	logout = cdv.deleteSession()
+	if logout.status_code == 200:
+		result.insert(END, "You have logged out.")
+	else:
+		result.insert(END, "There was an error logging out.")
+	return # requests.delete(cdv.url + '/session')
 
 def about():
 	tkMessageBox.showinfo("Mortgage Monthly Payment Calculator",
-		"\nCatDV QuickSearch\n\n"
+		"\nCatDV QuickSearch beta\n\n"
 		"\nCreated by E.Cudjoe"
 		"\nVersion 1.0"
 		"\nCopyright " + u"\u00A9" + " 2014-2015 E.cudjoe"
@@ -177,11 +190,6 @@ clr_btn.grid(row=1, column=0, sticky=E, pady=2, padx=2)
 
 button = tk.Button(util_btns, text="QUIT", command=login.quit)
 button.grid(row=1, column=1, sticky=E, pady=2, padx=2)
-
-
-#fileMenu = Menu(root, tearoff=0)
-#fileMenu.add_command(label="Exit")
-#root.add_cascade(label="File", menu=fileMenu)
 
 root.mainloop()
 root.destroy()
