@@ -4,22 +4,24 @@ import ttk as tk
 import tkMessageBox
 import requests
 import json
-#sys.path.insert(0, '../py-catdv') # IV local
-sys.path.insert(0, '../Py-CatDV')
-from CatDVlib import Cdvlib
+sys.path.insert(0, '../py-catdv') # IV local
+#sys.path.insert(0, '../Py-CatDV')
+from pycatdv import Catdvlib
 
 root = Tk()
 root.title('CatDV QuickSearch')
-cdv = Cdvlib()
-cdv.url = "http://mam.intervideo.co.uk:8080/api/4" #external access only
+cdv = Catdvlib()
+
+#external access
+#cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
 
 def c_login():
 	try:
 		usr = usernm.get()
 		pwd = passwrd.get()
 		
-		auth = cdv.setAuth(str(usr), str(pwd))
-		key = cdv.getSessionKey()
+		auth = cdv.set_auth(str(usr), str(pwd))
+		key = cdv.get_session_key()
 		if key:
 			result.insert(END, "Login successful")
 	except TypeError:
@@ -78,10 +80,10 @@ def enter_login(event):
 def clear_text():
 	result.delete(0, END)
 
-def deleteSession():
+def delete_session():
 	"""HTTP delete call to the API"""
 	clear_text()
-	logout = cdv.deleteSession()
+	logout = cdv.delete_session()
 	if logout.status_code == 200:
 		result.insert(END, "You have logged out.")
 	else:
@@ -129,7 +131,7 @@ exportmenu.add_command(label="as Text")
 # File
 filemenu.add_command(label="Print", state="disabled")
 filemenu.add_command(label="Clear", command=clear_text)
-filemenu.add_command(label="Logout", command=deleteSession)
+filemenu.add_command(label="Logout", command=delete_session)
 filemenu.add_command(label="Quit", command=login.quit)
 
 # Edit
@@ -163,7 +165,7 @@ pwd_ent.grid(row=0, column=3, padx=2)
 login_btn = tk.Button(login, text="LOGIN", command=c_login)
 login_btn.grid(row=0, column=4, padx=2)
 
-logout_btn = tk.Button(login, text="LOG OUT", command=deleteSession)
+logout_btn = tk.Button(login, text="LOG OUT", command=delete_session)
 logout_btn.grid(row=0, column=5, padx=2)
 
 ######## USER SEARCH ENTRY ######
