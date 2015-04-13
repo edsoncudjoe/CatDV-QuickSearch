@@ -4,9 +4,16 @@ import ttk as tk
 import tkMessageBox
 import requests
 import json
+import logging
+
 sys.path.insert(0, '../py-catdv') # IV local
 #sys.path.insert(0, '../Py-CatDV')
 from pycatdv import Catdvlib
+
+logging.basicConfig(filename='CDVQsErr.log', level=logging.ERROR,
+	format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %I:%M:%S %p')
+logger = logging.getLogger(__name__)
+
 
 root = Tk()
 root.title('CatDV QuickSearch')
@@ -19,53 +26,67 @@ def c_login():
 	try:
 		usr = usernm.get()
 		pwd = passwrd.get()
-		
+		logger.info('Start access to CatDV API')
 		auth = cdv.set_auth(str(usr), str(pwd))
 		key = cdv.get_session_key()
 		if key:
 			result.insert(END, "Login successful")
+			logger.info('Login successful')
 	except TypeError:
-		tkMessageBox.showwarning("Login Error", "You provided incorrect login details.\n"
-			"Please check and try again.")
+		tkMessageBox.showwarning("Login Error", "You provided incorrect login"
+		" details.\nPlease check and try again.")
+		logger.error('Incorrect user login', exc_info=True)
 	except requests.exceptions.ConnectTimeout as e:
-		tkMessageBox.showwarning("Server Error", "The server connection timed-out.")
-		print(e)
+		tkMessageBox.showwarning("Server Error", "The server connection"
+			" timed-out.")
+		logger.error('Server timed-out', exc_info=True)
 	except requests.exceptions.ConnectionError as e:
 		tkMessageBox.showwarning("Connection Error",'\nCan\'t access the API.'
-			' Please check you have the right domain address')
-		print(e)
-	except ValueError:
-		tkMessageBox.showwarning("","There was an error accessing the CatDV Server.")
+			' Please check the if CatDV server is working.')
+		logger.error('Server possibly not connected.', exc_info=True)
+	except Exception, e:
+		tkMessageBox.showwarning("","There was an error accessing the CatDV"
+		" Server.")
+		logger.error('Server error', exc_info=True)
+	finally:
+		try:
+			if cdv.key: logger.info('Stable connection to the API.')
+		except Exception, e:
+			logger.error('Unable to get session ID key from the API.',
+				exc_info=True)
+
 
 def query():
 	count = 0
 	entry = str(term.get())
 	if entry:
 		try:
-			res = requests.get(cdv.url + "/clips;jsessionid=" + cdv.key + "?filter=and"
-				"((clip.name)like({}))&include=userFields".format(entry))
+			res = requests.get(cdv.url + "/clips;jsessionid=" + cdv.key + 
+				"?filter=and((clip.name)like({}))&include=userFields".format(
+					entry))
 			data = json.loads(res.text)
 			clear_text()
 			for i in data['data']['items']:
 				try:
 					if i['userFields']['U7']:
 						count += 1
-						result.insert(END, i['userFields']['U7'] + '    ' + i['name'])       
+						result.insert(END, i['userFields']['U7'] + '    ' + 
+							i['name'])       
 					else:
 						count += 1
 						result.insert(END, i['name'])
-				except TypeError, e: # For files with no LTO number.
+				except TypeError, e: 
 					print("File not on LTO: {}".format(i['name']))
 				except KeyError:
 					pass
 			else:
 				if count == 0:
 					raise ValueError
-				#tkMessageBox.showwarning("", "No files found.")
-		except ValueError: # catches JSON errors where symbols have been entered.
+		except ValueError: 
 			tkMessageBox.showwarning("", "No files found.")
 	else:
-		tkMessageBox.showwarning("", "Enter name of the title in the search bar")
+		tkMessageBox.showwarning("", "Enter name of the title in the search" 
+			" bar")
 
 def enter_query(event):
 	query()
