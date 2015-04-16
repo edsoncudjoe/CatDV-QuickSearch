@@ -48,12 +48,6 @@ def c_login():
 		tkMessageBox.showwarning("","There was an error accessing the CatDV"
 		" Server.")
 		logger.error('Server error', exc_info=True)
-	finally:
-		try:
-			if cdv.key: logger.info('Stable connection to the API.')
-		except Exception, e:
-			logger.error('Unable to get session ID key from the API.',
-				exc_info=True)
 
 
 def query():
@@ -112,12 +106,12 @@ def delete_session():
 	return # requests.delete(cdv.url + '/session')
 
 def about():
-	tkMessageBox.showinfo("Mortgage Monthly Payment Calculator",
-		"\nCatDV QuickSearch beta\n\n"
+	tkMessageBox.showinfo("CatDV QuickSearch 1.0b",
+		"\nCatDV QuickSearch\n"
 		"\nCreated by E.Cudjoe"
-		"\nVersion 1.0"
-		"\nCopyright " + u"\u00A9" + " 2014-2015 E.cudjoe"
-		"\nhttps://github.com/edsondudjoe")
+		"\nVersion 1.0b")
+		#"\nCopyright " + "\u00A9" + " 2014-2015 E.cudjoe"
+		#"\nhttps://github.com/edsondudjoe")
 
 
 main = tk.Frame(root)
