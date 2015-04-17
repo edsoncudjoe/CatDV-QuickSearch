@@ -23,13 +23,13 @@ cdv = Catdvlib()
 
 def c_login():
 	try:
-		usr = usernm.get()
-		pwd = passwrd.get()
+		usr = app.username.get()
+		pwd = app.password.get()
 		logger.info('Start access to CatDV API')
 		auth = cdv.set_auth(str(usr), str(pwd))
 		key = cdv.get_session_key()
 		if key:
-			result.insert(END, "Login successful")
+			app.result.insert(END, "Login successful")
 			logger.info('Login successful')
 	except TypeError:
 		tkMessageBox.showwarning("Login Error", "You provided incorrect login"
@@ -51,7 +51,7 @@ def c_login():
 
 def query():
 	count = 0
-	entry = str(term.get())
+	entry = str(app.term.get())
 	if entry:
 		try:
 			res = requests.get(cdv.url + "/clips;jsessionid=" + cdv.key + 
@@ -63,11 +63,11 @@ def query():
 				try:
 					if i['userFields']['U7']:
 						count += 1
-						result.insert(END, i['userFields']['U7'] + '    ' + 
+						app.result.insert(END, i['userFields']['U7'] + '    ' + 
 							i['name'])       
 					else:
 						count += 1
-						result.insert(END, i['name'])
+						app.result.insert(END, i['name'])
 				except TypeError, e: 
 					print("File not on LTO: {}".format(i['name']))
 				except KeyError:
@@ -87,21 +87,21 @@ def enter_query(event):
 
 def enter_login(event):
 	print "logging in..."
-	result.insert(END, "Attempting login...")
+	app.result.insert(END, "Attempting login...")
 	c_login()
 	return
 
 def clear_text():
-	result.delete(0, END)
+	app.result.delete(0, END)
 
 def delete_session():
 	"""HTTP delete call to the API"""
 	clear_text()
 	logout = cdv.delete_session()
 	if logout.status_code == 200:
-		result.insert(END, "You have logged out.")
+		app.result.insert(END, "You have logged out.")
 	else:
-		result.insert(END, "There was an error logging out.")
+		app.result.insert(END, "There was an error logging out.")
 	return # requests.delete(cdv.url + '/session')
 
 def about():
@@ -111,20 +111,31 @@ def about():
 		"\nVersion 1.0b")
 		#"\nCopyright " + "\u00A9" + " 2014-2015 E.cudjoe"
 		#"\nhttps://github.com/edsondudjoe")
-
+N = tk.N
+S = tk.S
+E = tk.E
+W = tk.W
+END = tk.END
 
 class QS(tk.Frame):
-	def __init__(self, master):
-		tk.Frame.__init__(self, master)
-		self.login_frame = tk.Frame(master)
-		self.search_frame = tk.Frame(master)
-		self.result_frame = tk.Frame(master)
-		self.bottom_frame = tk.Frame(master)
+	def __init__(self, parent):
+		tk.Frame.__init__(self, parent)
+		self.parent = parent
+		self.parent.columnconfigure(0, weight=1)
+		self.parent.rowconfigure(0, weight=1)
+		self.parent.config(bg="tan2")
+		self.login_frame = tk.Frame(parent, bg="red")
+		self.search_frame = tk.Frame(parent, bg="yellow")
+		self.result_frame = tk.Frame(parent, bg="green")
+		self.bottom_frame = tk.Frame(parent, bg="blue")
 		
 		self.login_frame.grid(sticky=W, padx=5, pady=5)
 		self.search_frame.grid(sticky=W, padx=5, pady=5)
 		self.result_frame.grid(sticky=W, padx=5, pady=5)
-		self.bottom_frame.grid(sticky=S+E, padx=5, pady=5)		
+		self.bottom_frame.grid(sticky=S+E, padx=5, pady=5)
+
+		self.result_frame.rowconfigure(0, weight=1)
+		self.result_frame.columnconfigure(0, weight=2)		
 
 		self.create_menubar()
 		self.create_variables()
@@ -132,7 +143,7 @@ class QS(tk.Frame):
 		self.grid_widgets()
 
 	######## MENU BAR #########
-	def create_menubar():
+	def create_menubar(self):
 
 		self.menubar = tk.Menu(self.master)
 		self.filemenu = tk.Menu(self.menubar, tearoff=0,)
@@ -152,7 +163,7 @@ class QS(tk.Frame):
 		self.filemenu.add_command(label="Print", state="disabled")
 		self.filemenu.add_command(label="Clear", command=clear_text)
 		self.filemenu.add_command(label="Logout", command=delete_session)
-		self.filemenu.add_command(label="Quit", command=login.quit)
+		self.filemenu.add_command(label="Quit", command=root.quit)
 
 		# Edit
 		self.editmenu = tk.Menu(self.menubar, tearoff=0)
@@ -165,54 +176,58 @@ class QS(tk.Frame):
 		self.menubar.add_cascade(label="Help", menu=self.helpmenu)
 		self.helpmenu.add_command(label="About", command=about)
 
-	def create_variables():
-		self.username = StringVar() 
-		self.password = StringVar()
-		self.term = StringVar() 
+	def create_variables(self):
+		self.username = tk.StringVar() 
+		self.password = tk.StringVar()
+		self.term = tk.StringVar() 
 
-	def create_widgets():
-		self.usrname_label = ttk.Label(login_frame, text="Username: ")
-		self.usrname_entry = ttk.Entry(login_frame, textvariable=self.username)
-		self.password_label = ttk.Label(login_frame, text="Password: ")
+	def create_widgets(self):
+		self.usrname_label = ttk.Label(self.login_frame, text="Username: ")
+		self.usrname_entry = ttk.Entry(self.login_frame, textvariable=self.username)
+		self.password_label = ttk.Label(self.login_frame, text="Password: ")
 		self.password_entry = ttk.Entry(
-			login_frame, textvariable=self.password,show="*")
+			self.login_frame, textvariable=self.password,show="*")
 		self.password_entry.bind("<Return>", enter_login)
-		self.login_btn = ttk.Button(login_frame, text="LOGIN", command=c_login)
-		self.logout_btn = ttk.Button(login_frame, text="LOG OUT",
+		self.login_btn = ttk.Button(self.login_frame, text="LOGIN", command=c_login)
+		self.logout_btn = ttk.Button(self.login_frame, text="LOG OUT",
 			command=delete_session)
 
-		self.clip = ttk.Entry(search_frame, width="90", textvariable=self.term)
+		self.clip = ttk.Entry(self.search_frame, width="90", textvariable=self.term)
 		self.clip.bind("<Return>", enter_query)
-		self.search_btn = ttk.Button(search_frame, text="SEARCH", command=query)
-		self.scrollbar = ttk.Scrollbar(result_frame)
-		self.scrollbar.config(command=self.result.yview)
-		self.result = Listbox(result_frame, bg='grey', width=100, height=30)
+		self.search_btn = ttk.Button(self.search_frame, text="SEARCH", command=query)
+		
+		self.scrollbar = ttk.Scrollbar(self.result_frame)
+		self.result = tk.Listbox(self.result_frame, bg='grey', width=100, height=30)
 		self.result.config(yscrollcommand=self.scrollbar.set)
-		self.clr_btn = ttk.Button(bottom_frame, text="Clear", command=clear_text)
-		self.quit_button = ttk.Button(bottom_frame, text="QUIT", command=login.quit)
+		self.scrollbar.config(command=self.result.yview)
+		
+		self.clr_btn = ttk.Button(self.bottom_frame, text="Clear", command=clear_text)
+		self.quit_button = ttk.Button(self.bottom_frame, text="QUIT", command=root.quit)
 
-	def grid_widgets():
+	def grid_widgets(self):
 		self.usrname_label.grid(row=0, column=0)
 		self.usrname_entry.grid(row=0, column=1, padx=2)
 		self.password_label.grid(row=0, column=2, padx=2)
 		self.password_entry.grid(row=0, column=3, padx=2)
 		self.login_btn.grid(row=0, column=4, padx=2)
 		self.logout_btn.grid(row=0, column=5, padx=2)
-		self.clip.grid(row=0, column=0, sticky=E, padx=2)
+
+		self.clip.grid(row=0, column=0, columnspan=4, sticky=E, padx=2) #colspan
 		self.search_btn.grid(row=0, column=1, sticky=E, padx=2)
 		self.scrollbar.grid(column=1, sticky=N+S+W)
-		self.result.grid(row=0, column=0)
-		self.clr_btn.grid(row=1, column=0, sticky=E, pady=2, padx=2)
-		self.quit_button.grid(row=1, column=1, sticky=E, pady=2, padx=2)
+		self.result.grid(row=0, column=0, columnspan=4)
+		
+		self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
+		self.quit_button.grid(row=0, column=1, sticky=E, pady=2, padx=2)
 
 
 
 
 root = tk.Tk()
-app = QS(master=root)
 root.title('CatDV QuickSearch')
-root.geometry('500x500+200+100')
+root.geometry('500x800+200+100')
 
+app = QS(root)
 
-app.mainloop()
+root.mainloop()
 #root.destroy()
