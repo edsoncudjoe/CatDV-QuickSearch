@@ -1,13 +1,13 @@
 import sys
-from Tkinter import *
-import ttk as tk
+import Tkinter as tk
+import ttk 
 import tkMessageBox
 import requests
 import json
 import logging
 
 sys.path.insert(0, '../py-catdv') # IV local
-#sys.path.insert(0, '../Py-CatDV')
+sys.path.insert(0, '../Py-CatDV')
 from pycatdv import Catdvlib
 
 logging.basicConfig(filename='CDVQsErr.log', level=logging.ERROR,
@@ -15,8 +15,7 @@ logging.basicConfig(filename='CDVQsErr.log', level=logging.ERROR,
 logger = logging.getLogger(__name__)
 
 
-root = Tk()
-root.title('CatDV QuickSearch')
+
 cdv = Catdvlib()
 
 #external access
@@ -114,99 +113,106 @@ def about():
 		#"\nhttps://github.com/edsondudjoe")
 
 
-main = tk.Frame(root)
-main.grid()
+class QS(tk.Frame):
+	def __init__(self, master):
+		tk.Frame.__init__(self, master)
+		self.login_frame = tk.Frame(master)
+		self.search_frame = tk.Frame(master)
+		self.result_frame = tk.Frame(master)
+		self.bottom_frame = tk.Frame(master)
+		
+		self.login_frame.grid(sticky=W, padx=5, pady=5)
+		self.search_frame.grid(sticky=W, padx=5, pady=5)
+		self.result_frame.grid(sticky=W, padx=5, pady=5)
+		self.bottom_frame.grid(sticky=S+E, padx=5, pady=5)		
 
-login = tk.Frame(main)
-login.grid(sticky=W, padx=5, pady=5)
+		self.create_menubar()
+		self.create_variables()
+		self.create_widgets()
+		self.grid_widgets()
 
-usr_search = tk.Frame(main)
-usr_search.grid(sticky=W, padx=5, pady=5)
+	######## MENU BAR #########
+	def create_menubar():
 
-res_list = tk.Frame(main)
-res_list.grid(sticky=W, padx=5, pady=5)
+		self.menubar = tk.Menu(self.master)
+		self.filemenu = tk.Menu(self.menubar, tearoff=0,)
+		root.config(menu=self.menubar)
 
-util_btns = tk.Frame(main)
-util_btns.grid(sticky=S+E, padx=5, pady=2)
+		# File
+		self.menubar.add_cascade(label="File", menu=self.filemenu)
+		self.filemenu.add_command(label="Login", command=c_login)
+		self.filemenu.add_command(label="Search", command=query)
+		# File > Export
+		self.exportmenu = tk.Menu(self.filemenu, tearoff=0)
+		self.filemenu.add_cascade(label="Export", menu=self.exportmenu,
+			state="disabled")
+		self.exportmenu.add_command(label="as Spreadsheet")
+		self.exportmenu.add_command(label="as Text")
+		# File
+		self.filemenu.add_command(label="Print", state="disabled")
+		self.filemenu.add_command(label="Clear", command=clear_text)
+		self.filemenu.add_command(label="Logout", command=delete_session)
+		self.filemenu.add_command(label="Quit", command=login.quit)
 
-######## MENU BAR #########
-menubar = Menu(main)
-filemenu = Menu(menubar, tearoff=0,)
-root.config(menu=menubar)
+		# Edit
+		self.editmenu = tk.Menu(self.menubar, tearoff=0)
+		self.menubar.add_cascade(label="Edit", menu=self.editmenu)
+		self.editmenu.add_command(label="Select All", state="disabled")
+		self.editmenu.add_command(label="Copy", state="disabled")
 
-# File
-menubar.add_cascade(label="File", menu=filemenu)
-filemenu.add_command(label="Login", command=c_login)
-filemenu.add_command(label="Search", command=query)
-# File > Export
-exportmenu = Menu(filemenu, tearoff=0)
-filemenu.add_cascade(label="Export", menu=exportmenu, state="disabled")
-exportmenu.add_command(label="as Spreadsheet")
-exportmenu.add_command(label="as Text")
-# File
-filemenu.add_command(label="Print", state="disabled")
-filemenu.add_command(label="Clear", command=clear_text)
-filemenu.add_command(label="Logout", command=delete_session)
-filemenu.add_command(label="Quit", command=login.quit)
+		# Help
+		self.helpmenu = tk.Menu(self.menubar, tearoff=0)
+		self.menubar.add_cascade(label="Help", menu=self.helpmenu)
+		self.helpmenu.add_command(label="About", command=about)
 
-# Edit
-editmenu = Menu(menubar, tearoff=0)
-menubar.add_cascade(label="Edit", menu=editmenu)
-editmenu.add_command(label="Select All", state="disabled")
-editmenu.add_command(label="Copy", state="disabled")
+	def create_variables():
+		self.username = StringVar() 
+		self.password = StringVar()
+		self.term = StringVar() 
 
-# Help
-helpmenu = Menu(menubar, tearoff=0)
-menubar.add_cascade(label="Help", menu=helpmenu)
-helpmenu.add_command(label="About", command=about)
+	def create_widgets():
+		self.usrname_label = ttk.Label(login_frame, text="Username: ")
+		self.usrname_entry = ttk.Entry(login_frame, textvariable=self.username)
+		self.password_label = ttk.Label(login_frame, text="Password: ")
+		self.password_entry = ttk.Entry(
+			login_frame, textvariable=self.password,show="*")
+		self.password_entry.bind("<Return>", enter_login)
+		self.login_btn = ttk.Button(login_frame, text="LOGIN", command=c_login)
+		self.logout_btn = ttk.Button(login_frame, text="LOG OUT",
+			command=delete_session)
+
+		self.clip = ttk.Entry(search_frame, width="90", textvariable=self.term)
+		self.clip.bind("<Return>", enter_query)
+		self.search_btn = ttk.Button(search_frame, text="SEARCH", command=query)
+		self.scrollbar = ttk.Scrollbar(result_frame)
+		self.scrollbar.config(command=self.result.yview)
+		self.result = Listbox(result_frame, bg='grey', width=100, height=30)
+		self.result.config(yscrollcommand=self.scrollbar.set)
+		self.clr_btn = ttk.Button(bottom_frame, text="Clear", command=clear_text)
+		self.quit_button = ttk.Button(bottom_frame, text="QUIT", command=login.quit)
+
+	def grid_widgets():
+		self.usrname_label.grid(row=0, column=0)
+		self.usrname_entry.grid(row=0, column=1, padx=2)
+		self.password_label.grid(row=0, column=2, padx=2)
+		self.password_entry.grid(row=0, column=3, padx=2)
+		self.login_btn.grid(row=0, column=4, padx=2)
+		self.logout_btn.grid(row=0, column=5, padx=2)
+		self.clip.grid(row=0, column=0, sticky=E, padx=2)
+		self.search_btn.grid(row=0, column=1, sticky=E, padx=2)
+		self.scrollbar.grid(column=1, sticky=N+S+W)
+		self.result.grid(row=0, column=0)
+		self.clr_btn.grid(row=1, column=0, sticky=E, pady=2, padx=2)
+		self.quit_button.grid(row=1, column=1, sticky=E, pady=2, padx=2)
 
 
-######## USER LOGIN #######
-usrn = tk.Label(login, text="username: ")
-usrn.grid(row=0, column=0)
 
-usernm = StringVar() 
-usr_ent = tk.Entry(login, textvariable=usernm)
-usr_ent.grid(row=0, column=1, padx=2)
 
-pwd = tk.Label(login, text="password: ")
-pwd.grid(row=0, column=2, padx=2)
+root = tk.Tk()
+app = QS(master=root)
+root.title('CatDV QuickSearch')
+root.geometry('500x500+200+100')
 
-passwrd = StringVar()
-pwd_ent = tk.Entry(login, textvariable=passwrd, show="*")
-pwd_ent.bind("<Return>", enter_login)
-pwd_ent.grid(row=0, column=3, padx=2)
 
-login_btn = tk.Button(login, text="LOGIN", command=c_login)
-login_btn.grid(row=0, column=4, padx=2)
-
-logout_btn = tk.Button(login, text="LOG OUT", command=delete_session)
-logout_btn.grid(row=0, column=5, padx=2)
-
-######## USER SEARCH ENTRY ######
-term = StringVar() 
-clip = tk.Entry(usr_search, width="90", textvariable=term)
-clip.bind("<Return>", enter_query)
-clip.grid(row=0, column=0, sticky=E, padx=2)
-
-search_btn = tk.Button(usr_search, text="SEARCH", command=query)
-search_btn.grid(row=0, column=1, sticky=E, padx=2)
-
-####### RESULTS ###########
-scrollbar = tk.Scrollbar(res_list)
-scrollbar.grid(column=1, sticky=N+S+W)
-
-result = Listbox(res_list, bg='grey', width=100, height=30)
-result.grid(row=0, column=0)
-
-scrollbar.config(command=result.yview)
-result.config(yscrollcommand=scrollbar.set)
-
-clr_btn = tk.Button(util_btns, text="Clear", command=clear_text)
-clr_btn.grid(row=1, column=0, sticky=E, pady=2, padx=2)
-
-button = tk.Button(util_btns, text="QUIT", command=login.quit)
-button.grid(row=1, column=1, sticky=E, pady=2, padx=2)
-
-root.mainloop()
-root.destroy()
+app.mainloop()
+#root.destroy()
