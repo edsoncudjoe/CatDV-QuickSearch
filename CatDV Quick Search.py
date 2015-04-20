@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 cdv = Catdvlib()
 
 #external access
-cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
+#cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
 
 def c_login():
 	try:
@@ -70,7 +70,8 @@ def query():
 						count += 1
 						app.result.insert(END, i['name'])
 				except TypeError, e: 
-					print("File not on LTO: {}".format(i['name']))
+					#print("File not on LTO: {}".format(i['name']))
+					print(e)
 				except KeyError:
 					pass
 			else:
