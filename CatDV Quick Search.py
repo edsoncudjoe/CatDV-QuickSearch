@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 cdv = Catdvlib()
 
 #external access
-cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
+#cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
 
 def c_login():
 	try:
@@ -134,11 +134,12 @@ class QS(tk.Frame):
 
 		self.parent.columnconfigure(0, weight=4)
 		self.parent.rowconfigure(2, weight=4)
+		self.parent.config(bg='gray93')
 		
-		self.login_frame = tk.Frame(parent)
-		self.search_frame = tk.Frame(parent)
-		self.result_frame = tk.Frame(parent)
-		self.bottom_frame = tk.Frame(parent)
+		self.login_frame = tk.Frame(parent, bg='gray93')
+		self.search_frame = tk.Frame(parent, bg='gray93')
+		self.result_frame = tk.Frame(parent, bg='gray93')
+		self.bottom_frame = tk.Frame(parent, bg='gray93')
 		
 		self.login_frame.grid(row=0, sticky=W+E, padx=5, pady=10)
 		self.search_frame.grid(row=1, sticky=W+E, padx=5, pady=10)
