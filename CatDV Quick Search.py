@@ -6,6 +6,7 @@ import requests
 import json
 import logging
 import tkFont
+import tkFileDialog
 
 sys.path.insert(0, '../py-catdv') # IV local
 sys.path.insert(0, '../Py-CatDV')
@@ -16,13 +17,14 @@ logging.basicConfig(filename='CDVQsErr.log', level=logging.ERROR,
 logger = logging.getLogger(__name__)
 
 
-
+s_results = []
 cdv = Catdvlib()
 
 #external access
 #cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
 
 def c_login():
+	"""Login access to the CatDV database"""
 	try:
 		usr = app.username.get()
 		pwd = app.password.get()
@@ -65,9 +67,12 @@ def query():
 					if i['userFields']['U7']:
 						count += 1
 						if i['notes']:
+							s_results.append((i['userFields']['U7'], i['name'], \
+								i['notes']))
 							app.result.insert(END, i['userFields']['U7'] + 
 								' '*5 + i['name'] + ' '*7 + '*' + i['notes'])
-						else:       
+						else:
+							s_results.append((i['userFields']['U7'], i['name']))       
 							app.result.insert(END, 
 								i['userFields']['U7'] + ' '*5 + i['name'])
 					else:
@@ -97,6 +102,22 @@ def enter_login(event):
 	c_login()
 	return
 
+
+
+
+def export_text():
+	"""
+	Once the user has defined a filename. This function will export
+	thier search results to a text file.
+	"""
+	save_as = tkFileDialog.asksaveasfilename()
+	save_as = save_as + '.txt'
+	with open(save_as, 'w') as user_results:
+		for r in s_results:
+			for l in range(len(r)):
+				user_results.write((r[l] + '\t' + '\n'))
+		user_results.write('\n')
+
 def clear_text():
 	app.result.delete(0, END)
 
@@ -108,17 +129,17 @@ def delete_session():
 		app.result.insert(END, "You have logged out.")
 	else:
 		app.result.insert(END, "There was an error logging out.")
-	return # requests.delete(cdv.url + '/session')
+	return 
 
 def about():
 	tkMessageBox.showinfo("CatDV QuickSearch 1.0b",
 		"\nCatDV QuickSearch\n"
 		"\nCreated by E.Cudjoe"
 		"\nVersion 1.0.1b"
-		#"\nCopyright " + "\u00A9" + " 2014-2015 E.cudjoe"
+		"\nCopyright " + "\u00A9" + " 2014-2015 E.cudjoe"
 		"\nhttps://github.com/edsondudjoe")
 
-# Tkinter grid maanagement and listbox commands.
+# Tkinter grid management and listbox commands.
 N = tk.N
 S = tk.S
 E = tk.E
@@ -147,12 +168,15 @@ class QS(tk.Frame):
 		self.bottom_frame.grid(row=3, sticky=S+E, padx=5, pady=10)
 
 		self.result_frame.rowconfigure(0, weight=4)
-		self.result_frame.columnconfigure(0, weight=4)		
+		self.result_frame.columnconfigure(0, weight=4)
 
 		self.create_menubar()
+		self.create_right_click()
 		self.create_variables()
 		self.create_widgets()
 		self.grid_widgets()
+
+	
 
 	######## MENU BAR #########
 	def create_menubar(self):
@@ -166,13 +190,13 @@ class QS(tk.Frame):
 		self.filemenu.add_command(label="Login", command=c_login)
 		self.filemenu.add_command(label="Search", command=query)
 		# File > Export
-		#self.exportmenu = tk.Menu(self.filemenu, tearoff=0)
-		#self.filemenu.add_cascade(label="Export", menu=self.exportmenu,
-		#	state="disabled")
+		self.exportmenu = tk.Menu(self.filemenu, tearoff=0)
+		self.filemenu.add_cascade(label="Export", menu=self.exportmenu)
 		#self.exportmenu.add_command(label="as Spreadsheet")
-		#self.exportmenu.add_command(label="as Text")
+
+		self.exportmenu.add_command(label="as Text", command=export_text)
+
 		# File
-		#self.filemenu.add_command(label="Print", state="disabled")
 		self.filemenu.add_command(label="Clear", command=clear_text)
 		self.filemenu.add_command(label="Logout", command=delete_session)
 		self.filemenu.add_command(label="Quit", command=root.quit)
@@ -188,6 +212,18 @@ class QS(tk.Frame):
 		self.menubar.add_cascade(label="Help", menu=self.helpmenu)
 		self.helpmenu.add_command(label="About", command=about)
 
+	def create_right_click(self):
+		# Right-click menu
+		self.rc = tk.Menu(self.parent, tearoff=0)
+		self.rc.add_command(label="Select All")
+		self.rc.add_command(label="Copy")
+
+	def r_click(self, event):
+		try:
+			self.rc.tk_popup(event.x_root, event.y_root, 0)
+		finally:
+			self.rc.grab_release()	
+
 	def create_variables(self):
 		self.username = tk.StringVar() 
 		self.password = tk.StringVar()
@@ -201,6 +237,7 @@ class QS(tk.Frame):
 			self.login_frame, textvariable=self.password,show="*")
 		self.password_entry.bind("<Return>", enter_login)
 		self.login_btn = ttk.Button(self.login_frame, text="LOGIN", command=c_login)
+		self.login_btn.bind("<Return>", enter_login)
 		self.logout_btn = ttk.Button(self.login_frame, text="LOG OUT",
 			command=delete_session)
 
@@ -214,11 +251,14 @@ class QS(tk.Frame):
 		self.result = tk.Listbox(self.result_frame, bg='grey', width=100, height=20)
 		self.result.config(xscrollcommand = self.u_scrollbar.set,
 			yscrollcommand=self.scrollbar.set, font=m_font)
+		self.result.bind("<Button-3>", self.r_click) #
 		self.scrollbar.config(command=self.result.yview)
 		self.u_scrollbar.config(command=self.result.xview)
 		
 		self.clr_btn = ttk.Button(self.bottom_frame, text="Clear", command=clear_text)
 		self.quit_button = ttk.Button(self.bottom_frame, text="QUIT", command=root.quit)
+
+
 
 	def grid_widgets(self):
 		self.usrname_label.grid(row=0, column=0)
