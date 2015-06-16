@@ -174,7 +174,6 @@ class QS(tk.Frame):
 		self.result_frame.grid(row=2, sticky=N+S+W+E, padx=5, pady=10)
 		self.bottom_frame.grid(row=3, sticky=S+E, padx=5, pady=10)
 
-		#self.login_frame.rowconfigure(7, weight=1)
 		self.login_frame.columnconfigure(6, weight=1)
 		self.result_frame.rowconfigure(0, weight=4)
 		self.result_frame.columnconfigure(0, weight=4)
@@ -288,7 +287,7 @@ class QS(tk.Frame):
 		self.quit_button = ttk.Button(self.bottom_frame, text="QUIT", \
 			command=root.quit)
 
-#		self.tree.bind("<Button-2>", self.rc_pop)#self.r_click)
+		self.tree.bind("<Button-2>", self.rc_pop)#self.r_click)
 #		self.rc.bind("<Button-1>", select_all)
 
 	def grid_widgets(self):
@@ -311,23 +310,23 @@ class QS(tk.Frame):
 		self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
 		self.quit_button.grid(row=0, column=1, sticky=E, pady=2, padx=2)
 
-#	def rc_pop(self):
-#		pop = RC_Menu(self, self.a, self.b)
-#		try:
-#			pop.tk_popup(event.x_root, event.y_root)
-#		finally:
-#			pop.grab_release()
+	def rc_pop(self, event):
+		pop = Right_Click_Menu(self, self.a, self.b)
+		try:
+			pop.tk_popup(event.x_root, event.y_root)
+		finally:
+			pop.grab_release()
 
-#class RC_Menu(tk.Menu):
-#	"""Menu and options for user right click"""
-#	def __init__(self, master, a, b):
-#		tk.Menu.__init__(self, master, tearoff=0)
-#		self.a = a
-#		self.b = b
-#		self.add_command(label="Select All" command=self.loc)
-#		self.add_command(label="Copy")
-#	def loc(self):
-#		print self.a, self.b
+class Right_Click_Menu(tk.Menu):
+	"""Menu and options for user right click"""
+	def __init__(self, master, a, b):
+		tk.Menu.__init__(self, master, tearoff=0)
+		self.a = a
+		self.b = b
+		self.add_command(label="Select All", command=self.loc)
+		self.add_command(label="Copy")
+	def loc(self):
+		print self.a, self.b
 
 root = tk.Tk()
 root.title('CatDV QuickSearch')
