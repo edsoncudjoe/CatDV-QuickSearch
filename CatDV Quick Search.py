@@ -318,7 +318,7 @@ class QS(tk.Frame):
 		pop = Right_Click_Menu(self, item_iid)
 		try:
 			pop.tk_popup(event.x_root, event.y_root)	
-			print(self.tree.item(item_iid, "values"))
+			#print(self.tree.item(item_iid, "values"))
 		finally:
 			pop.grab_release()
 
@@ -330,7 +330,7 @@ class Right_Click_Menu(tk.Menu):
 		self.add_command(label="Select All", command=self.loc)
 		self.add_command(label="Copy")
 	def loc(self):
-		print self.a
+		print (self.a, app.tree.item(self.a, "values"))
 
 root = tk.Tk()
 root.title('CatDV QuickSearch')
