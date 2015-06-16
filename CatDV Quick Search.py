@@ -120,7 +120,7 @@ def export_text():
 			for l in range(len(r)):
 				user_results.write((r[l] + '\t' + '\n'))
 		user_results.write('\n')
-	#tkMessageBox.showinfo("Saved", "File has been saved")
+	app.result.insert(END, "File has been saved to : {}".format(save_as))
 
 def clear_text():
 	app.result.delete(0, END)
@@ -282,6 +282,9 @@ class QS(tk.Frame):
 			command=self.tree.yview)
 		self.tree.configure(yscrollcommand=self.tree_scrollbar.set)
 		
+		for i in range(10):
+			self.tree.insert("", "end", text="Item %s" % i)
+
 		self.clr_btn = ttk.Button(self.bottom_frame, text="Clear", \
 			command=clear_text)
 		self.quit_button = ttk.Button(self.bottom_frame, text="QUIT", \
@@ -311,22 +314,23 @@ class QS(tk.Frame):
 		self.quit_button.grid(row=0, column=1, sticky=E, pady=2, padx=2)
 
 	def rc_pop(self, event):
-		pop = Right_Click_Menu(self, self.a, self.b)
+		item_iid = self.tree.identify_row(event.y)
+		pop = Right_Click_Menu(self, item_iid)
 		try:
-			pop.tk_popup(event.x_root, event.y_root)
+			pop.tk_popup(event.x_root, event.y_root)	
+			print(self.tree.item(item_iid, "values"))
 		finally:
 			pop.grab_release()
 
 class Right_Click_Menu(tk.Menu):
 	"""Menu and options for user right click"""
-	def __init__(self, master, a, b):
+	def __init__(self, master, a):
 		tk.Menu.__init__(self, master, tearoff=0)
 		self.a = a
-		self.b = b
 		self.add_command(label="Select All", command=self.loc)
 		self.add_command(label="Copy")
 	def loc(self):
-		print self.a, self.b
+		print self.a
 
 root = tk.Tk()
 root.title('CatDV QuickSearch')
