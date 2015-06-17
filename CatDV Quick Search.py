@@ -139,13 +139,16 @@ def about():
 	tkMessageBox.showinfo("CatDV QuickSearch 1.0b",
 		"\nCatDV QuickSearch\n"
 		"\nCreated by E.Cudjoe"
-		"\nVersion 1.0.1b")
+		"\nVersion 1.0.1")
 		#"\nCopyright " + "\u00A9" + " 2014-2015 E.cudjoe"
 		#"\nhttps://github.com/edsondudjoe")
 
 def select_all(event):
 	tree_items = app.tree.identify_row(event.y)
 	print app.tree.item(item)
+
+def search_btn_return(event):
+	query()
 
 
 # Tkinter grid management and listbox commands.
@@ -205,7 +208,8 @@ class QS(tk.Frame):
 		self.exportmenu.add_command(label="as Text", command=export_text)
 
 		# File
-		self.filemenu.add_command(label="Clear", command=clear_text)
+		self.filemenu.add_command(label="Clear", command=clear_text, \
+			state="disabled")
 		self.filemenu.add_command(label="Logout", command=delete_session)
 		self.filemenu.add_command(label="Quit", command=root.quit)
 
@@ -256,6 +260,7 @@ class QS(tk.Frame):
 		self.clip.bind("<Return>", enter_query)
 		self.search_btn = ttk.Button(self.search_frame, text="SEARCH", \
 			command=query)
+		self.search_btn.bind("<Return>", search_btn_return)
 		
 		m_font = tkFont.Font(root=self.result_frame, size=14)
 		#self.scrollbar = ttk.Scrollbar(self.result_frame)
@@ -282,15 +287,15 @@ class QS(tk.Frame):
 			command=self.tree.yview)
 		self.tree.configure(yscrollcommand=self.tree_scrollbar.set)
 		
-		for i in range(10):
-			self.tree.insert("", "end", text="Item %s" % i)
+#		for i in range(10):
+#			self.tree.insert("", "end", text="Item %s" % i)
 
 		self.clr_btn = ttk.Button(self.bottom_frame, text="Clear", \
 			command=clear_text)
 		self.quit_button = ttk.Button(self.bottom_frame, text="QUIT", \
 			command=root.quit)
 
-		self.tree.bind("<Button-2>", self.rc_pop)#self.r_click)
+#		self.tree.bind("<Button-2>", self.rc_pop)#self.r_click)
 #		self.rc.bind("<Button-1>", select_all)
 
 	def grid_widgets(self):
@@ -310,7 +315,7 @@ class QS(tk.Frame):
 		self.tree.grid(row=0, column=0)
 		self.tree_scrollbar.grid(row=0, column=1, sticky=N+S)
 		
-		self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
+#		self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
 		self.quit_button.grid(row=0, column=1, sticky=E, pady=2, padx=2)
 
 	def rc_pop(self, event):
