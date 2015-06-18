@@ -120,6 +120,8 @@ def export_text():
 
 def clear_text():
 	app.result.delete(0, END)
+	for i in app.tree.get_children():
+		app.tree.delete(i)
 
 def delete_session():
 	"""HTTP delete call to the API"""
@@ -287,7 +289,7 @@ class QS(tk.Frame):
 		self.tree.grid(row=0, column=0)
 		self.tree_scrollbar.grid(row=0, column=1, sticky=N+S)
 		
-#		self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
+		self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
 		self.quit_button.grid(row=0, column=1, sticky=E, pady=2, padx=2)
 
 	def treeview_sort(self, tv, col, reverse):
