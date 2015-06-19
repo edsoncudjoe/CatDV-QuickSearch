@@ -20,9 +20,6 @@ logger = logging.getLogger(__name__)
 s_results = []
 cdv = Catdvlib()
 
-#external access
-#cdv.url = "http://mam.intervideo.co.uk:8080/api/4"
-
 def c_login():
 	"""Login access to the CatDV database"""
 	try:
@@ -34,6 +31,8 @@ def c_login():
 		if key:
 			app.result.insert(END, "Login successful")
 			logger.info('Login successful')
+		else:
+			raise TypeError
 	except TypeError:
 		tkMessageBox.showwarning("Login Error", "You provided incorrect login"
 		" details.\nPlease check and try again.")
@@ -44,7 +43,8 @@ def c_login():
 		logger.error('Server timed-out', exc_info=True)
 	except requests.exceptions.ConnectionError as e:
 		tkMessageBox.showwarning("Connection Error",'\nCan\'t access the API.'
-			' Please check the if CatDV server is working.')
+			'\nPlease check if you have the right server address and if the '\
+			'CatDV server is working.')
 		logger.error('Server possibly not connected.', exc_info=True)
 	except Exception, e:
 		tkMessageBox.showwarning("","There was an error accessing the CatDV"
@@ -138,7 +138,7 @@ def about():
 		"\nCatDV QuickSearch\n"
 		"\nCreated by E.Cudjoe"
 		"\nVersion 1.0.1"
-		"\nhttps://github.com/edsondudjoe")
+		"\nhttps://github.com/edsoncudjoe")
 
 def select_all(event):
 	tree_items = app.tree.identify_row(event.y)
@@ -176,7 +176,8 @@ class QS(tk.Frame):
 			pady=3, padx=3)
 		self.search_frame = tk.LabelFrame(parent, bg='gray93', text="Search", \
 			pady=3)
-		self.result_frame = tk.Frame(parent, bg='gray93')
+		self.result_frame = tk.LabelFrame(parent, bg='gray93', text="Results",\
+			 pady=3, padx=3)
 		self.bottom_frame = tk.Frame(parent, bg='gray93')
 		
 		self.login_frame.grid(row=0, sticky=W+E, padx=5, pady=10)
@@ -192,9 +193,6 @@ class QS(tk.Frame):
 		self.create_variables()
 		self.create_widgets()
 		self.grid_widgets()
-		self.settings_window()
-
-		self.s.protocol("WM_DELETE_WINDOW", self.on_exit)
 
 	######## MENU BAR #########
 	def create_menubar(self):
@@ -220,7 +218,7 @@ class QS(tk.Frame):
 			command=self.settings_window)
 		self.filemenu.add_separator()
 		self.filemenu.add_command(label="Logout", command=delete_session)
-		self.filemenu.add_command(label="Quit", command=root.quit)
+		self.filemenu.add_command(label="Quit", command=self.on_exit)
 
 		# Help
 		self.helpmenu = tk.Menu(self.menubar, tearoff=0)
@@ -326,7 +324,7 @@ class QS(tk.Frame):
 		self.server_address = ttk.Label(self.s, 
 			text="Enter the full CatDV server Address including protocol" \
 			" and port number.\n\nExample:" \
-			" \'http://ExampleDomainAddress:8080\'\n", width=100)
+			" \'http://<ExampleDomainAddress>:8080\'\n", width=100)
 		self.s_address_entry = ttk.Entry(self.s, textvariable=self.cdv_server, \
 			width=100)
 		self.confirm_setting = ttk.Button(self.s, text="OK", \
@@ -346,11 +344,12 @@ class QS(tk.Frame):
 			tkMessageBox.showwarning("", "Server address should start with" \
 			" \'http://\' or \'https://\'")
 		logger.info("Server url changed to {}".format(cdv.url))
-		app.result.insert(END, "Server address changed to: {}".format(cdv.url))
+		app.result.insert(END, "Server address set to: {}".format(cdv.url))
 		self.s.destroy()
 
 	def on_exit(self):
 		if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
+			delete_session()
 			root.quit()
 
 
