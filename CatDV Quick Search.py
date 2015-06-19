@@ -147,6 +147,8 @@ def select_all(event):
 def search_btn_return(event):
 	query()
 
+def settings_btn_return(event):
+	app.set_server_address()
 
 # Tkinter grid management and listbox commands.
 N = tk.N
@@ -170,8 +172,10 @@ class QS(tk.Frame):
 		self.parent.rowconfigure(2, weight=4)
 		self.parent.config(bg='gray93')
 		
-		self.login_frame = tk.Frame(parent, bg='gray93')
-		self.search_frame = tk.Frame(parent, bg='gray93')
+		self.login_frame = tk.LabelFrame(parent, bg='gray93', text="Login", \
+			pady=3, padx=3)
+		self.search_frame = tk.LabelFrame(parent, bg='gray93', text="Search", \
+			pady=3)
 		self.result_frame = tk.Frame(parent, bg='gray93')
 		self.bottom_frame = tk.Frame(parent, bg='gray93')
 		
@@ -188,6 +192,9 @@ class QS(tk.Frame):
 		self.create_variables()
 		self.create_widgets()
 		self.grid_widgets()
+		self.settings_window()
+
+		self.s.protocol("WM_DELETE_WINDOW", self.on_exit)
 
 	######## MENU BAR #########
 	def create_menubar(self):
@@ -200,14 +207,18 @@ class QS(tk.Frame):
 		self.menubar.add_cascade(label="File", menu=self.filemenu)
 		self.filemenu.add_command(label="Login", command=c_login)
 		self.filemenu.add_command(label="Search", command=query)
+
 		# File > Export
 		self.exportmenu = tk.Menu(self.filemenu, tearoff=0)
 		self.filemenu.add_cascade(label="Export results", menu=self.exportmenu)
 		self.exportmenu.add_command(label="as Text", command=export_text)
 
 		# File
-		self.filemenu.add_command(label="Clear", command=clear_text, \
-			state="disabled")
+		self.filemenu.add_command(label="Clear", command=clear_text)
+		self.filemenu.add_separator()
+		self.filemenu.add_command(label="Settings", \
+			command=self.settings_window)
+		self.filemenu.add_separator()
 		self.filemenu.add_command(label="Logout", command=delete_session)
 		self.filemenu.add_command(label="Quit", command=root.quit)
 
@@ -219,7 +230,8 @@ class QS(tk.Frame):
 	def create_variables(self):
 		self.username = tk.StringVar() 
 		self.password = tk.StringVar()
-		self.term = tk.StringVar() 
+		self.term = tk.StringVar()
+		self.cdv_server = tk.StringVar() 
 
 	def create_widgets(self):
 		self.usrname_label = ttk.Label(self.login_frame, text="Username: ")
@@ -272,7 +284,7 @@ class QS(tk.Frame):
 		self.clr_btn = ttk.Button(self.bottom_frame, text="Clear", \
 			command=clear_text)
 		self.quit_button = ttk.Button(self.bottom_frame, text="QUIT", \
-			command=root.quit)
+			command=self.on_exit)
 
 	def grid_widgets(self):
 		self.usrname_label.grid(row=0, column=0)
@@ -284,7 +296,7 @@ class QS(tk.Frame):
 
 		self.clip.grid(row=0, column=0, columnspan=4, sticky=E, padx=2)
 		self.search_btn.grid(row=0, column=5, sticky=E, padx=2)
-		self.result.grid(row=0, column=6, columnspan=2, sticky=E)
+		self.result.grid(row=0, column=6, columnspan=1, sticky=E)
 
 		self.tree.grid(row=0, column=0)
 		self.tree_scrollbar.grid(row=0, column=1, sticky=N+S)
@@ -304,6 +316,45 @@ class QS(tk.Frame):
 		tv.heading(col, command=lambda: \
 			self.treeview_sort(tv, col, not reverse))
 
+	def settings_window(self):
+		"""
+		Users can change location address of the CatDV server
+		"""
+		self.s = tk.Toplevel(self, width=120, height=50, bg='gray93', padx=10, \
+			pady=10)
+		self.s.wm_title("Settings")
+		self.server_address = ttk.Label(self.s, 
+			text="Enter the full CatDV server Address including protocol" \
+			" and port number.\n\nExample:" \
+			" \'http://ExampleDomainAddress:8080\'\n", width=100)
+		self.s_address_entry = ttk.Entry(self.s, textvariable=self.cdv_server, \
+			width=100)
+		self.confirm_setting = ttk.Button(self.s, text="OK", \
+			command=self.set_server_address)
+		
+		self.server_address.grid()
+		self.s_address_entry.grid()
+		self.confirm_setting.grid()	
+
+		self.s_address_entry.bind('<Return>', settings_btn_return)
+
+	def set_server_address(self):
+		address = self.cdv_server.get()
+		if address.startswith('http://') or address.startswith('https://'):
+				cdv.url = address + "/api/4"
+		else:
+			tkMessageBox.showwarning("", "Server address should start with" \
+			" \'http://\' or \'https://\'")
+		logger.info("Server url changed to {}".format(cdv.url))
+		app.result.insert(END, "Server address changed to: {}".format(cdv.url))
+		self.s.destroy()
+
+	def on_exit(self):
+		if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
+			root.quit()
+
+
+
 root = tk.Tk()
 root.title('CatDV QuickSearch')
 #root.update()
@@ -312,4 +363,4 @@ root.minsize(root.winfo_width(), root.winfo_height())
 app = QS(root)
 
 root.mainloop()
-app.destroy()
+
