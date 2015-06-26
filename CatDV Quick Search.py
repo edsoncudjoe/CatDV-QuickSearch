@@ -320,19 +320,28 @@ class QS(tk.Frame):
 		"""
 		self.s = tk.Toplevel(self, width=120, height=50, bg='gray93', padx=10, \
 			pady=10)
+		
+		self.settings_entry_frame = tk.Frame(self.s, bg='gray93', pady=3, padx=3)
+		self.settings_btns_frame = tk.Frame(self.s, bg='gray93', pady=3, padx=3)
+		self.settings_entry_frame.grid(row=0)
+		self.settings_btns_frame.grid(row=1)
+
 		self.s.wm_title("Settings")
-		self.server_address = ttk.Label(self.s, 
+		self.server_address = ttk.Label(self.settings_entry_frame, 
 			text="Enter the full CatDV server Address including protocol" \
 			" and port number.\n\nExample:" \
 			" \'http://<ExampleDomainAddress>:8080\'\n", width=100)
-		self.s_address_entry = ttk.Entry(self.s, textvariable=self.cdv_server, \
-			width=100)
-		self.confirm_setting = ttk.Button(self.s, text="OK", \
-			command=self.set_server_address)
+		self.s_address_entry = ttk.Entry(self.settings_entry_frame, 
+			textvariable=self.cdv_server, width=100)
+		self.cancel_settings = ttk.Button(self.settings_btns_frame, 
+			text="Cancel", command=self.s.destroy)
+		self.confirm_setting = ttk.Button(self.settings_btns_frame, 
+			text="OK", command=self.set_server_address)
 		
 		self.server_address.grid()
 		self.s_address_entry.grid()
-		self.confirm_setting.grid()	
+		self.cancel_settings.grid(row=0, column=0)
+		self.confirm_setting.grid(row=0, column=1)	
 
 		self.s_address_entry.bind('<Return>', settings_btn_return)
 
