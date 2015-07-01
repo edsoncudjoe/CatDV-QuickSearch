@@ -7,6 +7,7 @@ import json
 import logging
 import tkFont
 import tkFileDialog
+from settings import url
 
 sys.path.insert(0, '../py-catdv') # IV local
 sys.path.insert(0, '../Py-CatDV')
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 s_results = []
 cdv = Catdvlib()
+cdv.url = url
 
 def c_login():
 	"""Login access to the CatDV database"""
@@ -93,6 +95,7 @@ def query():
 	else:
 		tkMessageBox.showwarning("", "Enter name of the title in the search" 
 			" bar")
+	delete_session()
 
 def enter_query(event):
 	query()
@@ -349,16 +352,23 @@ class QS(tk.Frame):
 		address = self.cdv_server.get()
 		if address.startswith('http://') or address.startswith('https://'):
 				cdv.url = address + "/api/4"
+				with open('settings.py', 'w') as set_server:
+					set_server.write("url = '{}/api/4'".format(address))
+				#set_server = open('settings.py', 'w')
+				#set_server.write("url = '{}/api/4'".format(address))
+				#set_server.close()
 		else:
 			tkMessageBox.showwarning("", "Server address should start with" \
 			" \'http://\' or \'https://\'")
 		logger.info("Server url changed to {}".format(cdv.url))
 		app.result.insert(END, "Server address set to: {}".format(cdv.url))
+		app.result.insert(END, "Restart the application for the changes to "\
+			"take effect".format(cdv.url))
 		self.s.destroy()
 
 	def on_exit(self):
 		if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
-			delete_session()
+			#delete_session()
 			root.quit()
 
 
