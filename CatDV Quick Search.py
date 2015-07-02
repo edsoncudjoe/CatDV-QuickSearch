@@ -140,7 +140,7 @@ def about():
 	tkMessageBox.showinfo("CatDV QuickSearch 1.0b",
 		"\nCatDV QuickSearch\n"
 		"\nCreated by E.Cudjoe"
-		"\nVersion 1.0.1"
+		"\nVersion 1.5.7"
 		"\nhttps://github.com/edsoncudjoe")
 
 def select_all(event):
