@@ -5,6 +5,7 @@ import tkMessageBox
 import requests
 import json
 import logging
+import threading
 import tkFont
 import tkFileDialog
 from settings import url
@@ -32,13 +33,14 @@ def c_login():
         auth = cdv.set_auth(str(usr), str(pwd))
         key = cdv.get_session_key()
         if key:
-            app.result.insert(END, "Login successful")
+            app.status.set("Login successful")
             logger.info('Login successful')
         else:
             raise TypeError
     except TypeError:
         tkMessageBox.showwarning("Login Error", "You provided incorrect login"
-                                                " details.\nPlease check and try again.")
+                                                " details.\nPlease check and "
+                                                "try again.")
         logger.error('Incorrect user login', exc_info=True)
     except requests.exceptions.ConnectTimeout as e:
         tkMessageBox.showwarning("Server Error", "The server connection"
@@ -46,8 +48,10 @@ def c_login():
         logger.error('Server timed-out', exc_info=True)
     except requests.exceptions.ConnectionError as e:
         tkMessageBox.showwarning("Connection Error", '\nCan\'t access the API.'
-                                                     '\nPlease check if you have the right server address and if the ' \
-                                                     'CatDV server is working.')
+                                                     '\nPlease check if you '
+                                                     'have the right server '
+                                                     'address and if the '
+                                                     'CatDV server is working')
         logger.error('Server possibly not connected.', exc_info=True)
     except Exception, e:
         tkMessageBox.showwarning("", "There was an error accessing the CatDV"
@@ -60,9 +64,10 @@ def query():
     entry = str(app.term.get())
     if entry:
         try:
-            res = requests.get(cdv.url + "/clips;jsessionid=" + cdv.key +
-                               "?filter=and((clip.name)like({}))&include=userFields".format(
-                                   entry))
+            res = requests.get(
+                cdv.url + "/clips;jsessionid=" + cdv.key +
+                               "?filter=and((clip.name)like({}))"
+                               "&include=userFields".format(entry))
             data = json.loads(res.text)
             clear_text()
             for i in data['data']['items']:
@@ -72,21 +77,15 @@ def query():
                         if i['notes']:
                             s_results.append((i['userFields']['U7'],
                                               i['name'], i['notes']))
-                            try:
-                                app.tree.insert("", count, text=str(count),
+                            app.tree.insert("", count, text=str(count),
                                             values=(i['userFields']['U7'],
                                                     i['name'], i['notes']))
-                            except Exception as e:
-                                print(e)
                         else:
                             s_results.append((i['userFields']['U7'],
                                               i['name']))
-                            try:
-                                app.tree.insert("", count, text=str(count),
+                            app.tree.insert("", count, text=str(count),
                                             values=(i['userFields']['U7'],
                                                     i['name']))
-                            except Exception as e:
-                                print e
                     else:
                         count += 1
                         app.result.insert(END, i['name'])
@@ -103,29 +102,27 @@ def query():
         except AttributeError:
             tkMessageBox.showwarning("", "Log in to CatDV first")
     else:
-        tkMessageBox.showwarning("", "Enter name of the title in the search"
-                                     " bar")
-    delete_session()
-    return s_results
+        tkMessageBox.showwarning("", "Enter name of the title in the "
+                                     "search bar")
+
 
 
 def enter_query(event):
-    query()
-    return
+    q = threading.Thread(name="search_query", target=query)
+    q.start()
 
 
 def enter_login(event):
-    print "logging in..."
-    app.result.insert(END, "Attempting login...")
+    app.status.set("Attempting login...")
     c_login()
     return
 
 
 def export_text():
     """
-	Once the user has defined a filename. This function will export
-	thier search results to a text file.
-	"""
+    Once the user has defined a filename. This function will export
+    their search results to a text file.
+    """
     save_as = tkFileDialog.asksaveasfilename()
     save_as = save_as + '.txt'
     with open(save_as, 'w') as user_results:
@@ -133,11 +130,10 @@ def export_text():
             for l in range(len(r)):
                 user_results.write((r[l] + '\t' + '\n'))
         user_results.write('\n')
-    app.result.insert(END, "File has been saved to : {}".format(save_as))
+    app.status.set("File has been saved to : {}".format(save_as))
 
 
 def clear_text():
-    app.result.delete(0, END)
     for i in app.tree.get_children():
         app.tree.delete(i)
 
@@ -147,10 +143,9 @@ def delete_session():
     clear_text()
     logout = cdv.delete_session()
     if logout.status_code == 200:
-        app.result.insert(END, "You have logged out.")
+        app.status.set("You have logged out.")
     else:
-        app.result.insert(END, "There was an error logging out.")
-    return
+        app.status.set("There was an error logging out.")
 
 
 def about():
@@ -184,9 +179,9 @@ END = tk.END
 
 class QS(tk.Frame):
     """
-	GUI that connects to the CatDV server api and returns clip
-	results based on user entry
-	"""
+    GUI that connects to the CatDV server api and returns clip
+    results based on user entry
+    """
 
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
@@ -254,6 +249,7 @@ class QS(tk.Frame):
         self.password = tk.StringVar()
         self.term = tk.StringVar()
         self.cdv_server = tk.StringVar()
+        self.status = tk.StringVar()
 
     def create_widgets(self):
         self.usrname_label = ttk.Label(self.login_frame, text="Username: ")
@@ -280,6 +276,10 @@ class QS(tk.Frame):
         self.result = tk.Listbox(self.login_frame, bg='grey', width=50,
                                  height=2)
         self.result.config(font=m_font)
+
+        self.status_bar = tk.Label(self.parent, bg='#8e8e8e', fg='#ffffff',
+                                   textvariable=self.status, relief=tk.RIDGE,
+                                   anchor=W, justify=tk.LEFT)
 
         # Treeview
         self.columns = ('IV Number', 'Filename', 'Notes')
@@ -318,14 +318,15 @@ class QS(tk.Frame):
         self.logout_btn.grid(row=0, column=5, padx=2)
 
         self.clip.grid(row=0, column=0, columnspan=4, sticky=E, padx=2)
-        self.search_btn.grid(row=0, column=5, sticky=E, padx=2)
-        self.result.grid(row=0, column=6, columnspan=1, sticky=E)
+#        self.search_btn.grid(row=0, column=5, sticky=E, padx=2)
 
         self.tree.grid(row=0, column=0)
         self.tree_scrollbar.grid(row=0, column=1, sticky=N + S)
 
         self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
         self.quit_button.grid(row=0, column=1, sticky=E, pady=2, padx=2)
+
+        self.status_bar.grid(row=4, column=0, ipady=4, ipadx=10, sticky=E+W+S)
 
     def treeview_sort(self, tv, col, reverse):
         l = [(tv.set(k, col), k) for k in tv.get_children('')]
@@ -341,8 +342,8 @@ class QS(tk.Frame):
 
     def settings_window(self):
         """
-		Users can change location address of the CatDV server
-		"""
+        Users can change location address of the CatDV server
+        """
         self.s = tk.Toplevel(self, width=120, height=50, bg='gray93', padx=10,
                              pady=10)
 
@@ -355,9 +356,11 @@ class QS(tk.Frame):
 
         self.s.wm_title("Settings")
         self.server_address = ttk.Label(self.settings_entry_frame,
-                                        text="Enter the full CatDV server Address including protocol" \
-                                             " and port number.\n\nExample:" \
-                                             " \'http://<ExampleDomainAddress>:8080\'\n",
+                                        text="Enter the full CatDV server "
+                                             "Address including protocol"
+                                             " and port number.\n\nExample:"
+                                             " \'http://"
+                                             "<ExampleDomainAddress>:8080\'\n",
                                         width=100)
         self.s_address_entry = ttk.Entry(self.settings_entry_frame,
                                          textvariable=self.cdv_server,
@@ -382,21 +385,16 @@ class QS(tk.Frame):
             cdv.url = address + "/api/4"
             with open('settings.py', 'w') as set_server:
                 set_server.write("url = '{}/api/4'".format(address))
-            # set_server = open('settings.py', 'w')
-            # set_server.write("url = '{}/api/4'".format(address))
-            # set_server.close()
         else:
             tkMessageBox.showwarning("", "Server address should start with"
                                          " \'http://\' or \'https://\'")
         logger.info("Server url changed to {}".format(cdv.url))
-        app.result.insert(END, "Server address set to: {}".format(cdv.url))
-        app.result.insert(END, "Restart the application for the changes to "
-                               "take effect".format(cdv.url))
+
+        self.status.set("Server address set to: {}".format(cdv.url))
         self.s.destroy()
 
     def on_exit(self):
         if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
-            # delete_session()
             root.quit()
 
 
@@ -409,4 +407,3 @@ app = QS(root)
 
 root.mainloop()
 
-l = query()
