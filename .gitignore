@@ -3,3 +3,4 @@ todo.txt
 pycatdv.py
 setup.py
 white-search.icns
+*.pyc
