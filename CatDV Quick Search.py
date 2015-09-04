@@ -186,32 +186,39 @@ class QS(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         self.parent = parent
+        self.create_variables()
+        self.login_window()
 
         self.parent.columnconfigure(0, weight=4)
         self.parent.rowconfigure(2, weight=4)
-        self.parent.config(bg='gray93')
+        self.parent.config(bg='#666666')
 
-        self.login_frame = tk.LabelFrame(parent, bg='gray93', text="Login",
-                                         pady=3, padx=3)
-        self.search_frame = tk.LabelFrame(parent, bg='gray93', text="Search",
-                                          pady=3)
-        self.result_frame = tk.LabelFrame(parent, bg='gray93', text="Results",
-                                          pady=3, padx=3)
-        self.bottom_frame = tk.Frame(parent, bg='gray93')
+        self.login_frame = tk.LabelFrame(parent, bg='#666666',
+                                         fg='#ffffff', text="Login",
+                                         pady=3, padx=3, relief=tk.FLAT)
+        self.search_frame = tk.LabelFrame(parent, bg='#666666',
+                                          fg='#ffffff', text="Search",
+                                          relief=tk.FLAT)
+        self.result_frame = tk.LabelFrame(parent, bg='#666666',
+                                          fg='#ffffff', text="Results",
+                                          padx=1, relief=tk.FLAT)
+        self.bottom_frame = tk.Frame(parent, bg='#666666')
 
-        self.login_frame.grid(row=0, sticky=W + E, padx=5, pady=10)
-        self.search_frame.grid(row=1, sticky=W + E, padx=5, pady=10)
-        self.result_frame.grid(row=2, sticky=N + S + W + E, padx=5, pady=10)
-        self.bottom_frame.grid(row=3, sticky=S + E, padx=5, pady=10)
+#        self.login_frame.grid(row=0, sticky=W + E, padx=5, pady=10)
+        self.search_frame.grid(row=1, sticky=W + E, padx=2, pady=2)
+        self.result_frame.grid(row=2, sticky=N + S + W + E, padx=5, pady=2)
+        self.bottom_frame.grid(row=3, sticky=S + E, padx=5, pady=2)
 
         self.login_frame.columnconfigure(6, weight=1)
         self.result_frame.rowconfigure(0, weight=4)
         self.result_frame.columnconfigure(0, weight=4)
 
         self.create_menubar()
-        self.create_variables()
         self.create_widgets()
         self.grid_widgets()
+
+        self.s = ttk.Style()
+        self.s.theme_use('default')
 
     ######## MENU BAR #########
     def create_menubar(self):
@@ -222,7 +229,7 @@ class QS(tk.Frame):
 
         # File
         self.menubar.add_cascade(label="File", menu=self.filemenu)
-        self.filemenu.add_command(label="Login", command=c_login)
+        self.filemenu.add_command(label="Login", command=self.login_window)
         self.filemenu.add_command(label="Search", command=query)
 
         # File > Export
@@ -251,11 +258,49 @@ class QS(tk.Frame):
         self.cdv_server = tk.StringVar()
         self.status = tk.StringVar()
 
+
+    def login_window(self):
+        self.login = tk.Toplevel(self, width=250, height=250, padx=5,
+                                 pady=2, bg='#666666')
+        self.login.lift()
+        self.login.title("CatDV QuickSearch Login")
+        self.login.config(bg='#666666')
+        self.login_fr = tk.Frame(self.login, padx=5, pady=5, bg='#666666')
+
+        self.user_label = ttk.Label(self.login_fr, text="Username: ",
+                                    justify=tk.LEFT, background='#666666',
+                                    foreground='#ffffff')
+        self.user_entry = ttk.Entry(self.login_fr, textvariable=self.username)
+        self.pwd_label = ttk.Label(self.login_fr, text="Password: ",
+                                   background='#666666', foreground='#ffffff')
+        self.pwd_entry = ttk.Entry(
+            self.login_fr, textvariable=self.password, show="*",
+            justify=tk.LEFT)
+        self.pwd_entry.bind("<Return>", enter_login)
+        self.cancel_login_btn = ttk.Button(self.login_fr, text='cancel',
+                                           command=self.login.destroy)
+        self.u_login_btn = ttk.Button(self.login_fr, text="login",
+                                      command=c_login)
+        self.u_login_btn.bind("<Return>", enter_login)
+
+        self.login_fr.grid()
+        self.user_label.grid(row=0, column=0)
+        self.user_entry.grid(row=0, column=1)
+        self.pwd_label.grid(row=1, column=0)
+        self.pwd_entry.grid(row=1, column=1, pady=2)
+        self.cancel_login_btn.grid(row=2, column=0, sticky=E, pady=2)
+        self.u_login_btn.grid(row=2, column=1, pady=2)
+
+
     def create_widgets(self):
-        self.usrname_label = ttk.Label(self.login_frame, text="Username: ")
+        self.usrname_label = ttk.Label(self.login_frame, text="Username: ",
+                                       background='#666666',
+                                       foreground='#ffffff')
         self.usrname_entry = ttk.Entry(self.login_frame,
                                        textvariable=self.username)
-        self.password_label = ttk.Label(self.login_frame, text="Password: ")
+        self.password_label = ttk.Label(self.login_frame, text="Password: ",
+                                       background='#666666',
+                                       foreground='#ffffff')
         self.password_entry = ttk.Entry(
             self.login_frame, textvariable=self.password, show="*")
         self.password_entry.bind("<Return>", enter_login)
@@ -265,7 +310,7 @@ class QS(tk.Frame):
         self.logout_btn = ttk.Button(self.login_frame, text="LOG OUT",
                                      command=delete_session)
 
-        self.clip = ttk.Entry(self.search_frame, width="90",
+        self.clip = ttk.Entry(self.search_frame, width="150",
                               textvariable=self.term)
         self.clip.bind("<Return>", enter_query)
         self.search_btn = ttk.Button(self.search_frame, text="SEARCH",
@@ -277,8 +322,8 @@ class QS(tk.Frame):
                                  height=2)
         self.result.config(font=m_font)
 
-        self.status_bar = tk.Label(self.parent, bg='#8e8e8e', fg='#ffffff',
-                                   textvariable=self.status, relief=tk.RIDGE,
+        self.status_bar = tk.Label(self.parent, bg='#666666', fg='#ffffff',
+                                   textvariable=self.status, relief=tk.SUNKEN,
                                    anchor=W, justify=tk.LEFT)
 
         # Treeview
@@ -290,8 +335,8 @@ class QS(tk.Frame):
 
         self.tree.column("#0", width=50)
         self.tree.column("IV Number", width=120)
-        self.tree.column("Filename", width=900)
-        self.tree.column("Notes", width=500)
+        self.tree.column("Filename", width=800)
+        self.tree.column("Notes", width=300)
 
         self.tree.heading("IV Number", command=lambda: self.treeview_sort(
             self.tree, "IV Number", False))
@@ -318,13 +363,13 @@ class QS(tk.Frame):
         self.logout_btn.grid(row=0, column=5, padx=2)
 
         self.clip.grid(row=0, column=0, columnspan=4, sticky=E, padx=2)
-#        self.search_btn.grid(row=0, column=5, sticky=E, padx=2)
+        self.search_btn.grid(row=0, column=5, sticky=E, padx=2)
 
         self.tree.grid(row=0, column=0)
         self.tree_scrollbar.grid(row=0, column=1, sticky=N + S)
 
-        self.clr_btn.grid(row=0, column=0, sticky=E, pady=2, padx=2)
-        self.quit_button.grid(row=0, column=1, sticky=E, pady=2, padx=2)
+        self.clr_btn.grid(row=0, column=0, sticky=E, padx=2)
+        self.quit_button.grid(row=0, column=1, sticky=E, padx=2)
 
         self.status_bar.grid(row=4, column=0, ipady=4, ipadx=10, sticky=E+W+S)
 
@@ -400,10 +445,11 @@ class QS(tk.Frame):
 
 root = tk.Tk()
 root.title('CatDV QuickSearch')
-# root.update()
+root.update()
 root.minsize(root.winfo_width(), root.winfo_height())
 
 app = QS(root)
 
 root.mainloop()
+
 
