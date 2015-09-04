@@ -79,13 +79,14 @@ def query():
                                               i['name'], i['notes']))
                             app.tree.insert("", count, text=str(count),
                                             values=(i['userFields']['U7'],
-                                                    i['name'], i['notes']))
+                                                    i['name'],
+                                                    i['notes']),)
                         else:
                             s_results.append((i['userFields']['U7'],
                                               i['name']))
                             app.tree.insert("", count, text=str(count),
                                             values=(i['userFields']['U7'],
-                                                    i['name']))
+                                                    i['name']),)
                     else:
                         count += 1
                         app.result.insert(END, i['name'])
@@ -169,6 +170,14 @@ def settings_btn_return(event):
     app.set_server_address()
 
 
+def login_btn_handlr():
+    c_login()
+    app.login.destroy()
+
+def login_return(event):
+    c_login()
+    app.login.destroy()
+
 # Tkinter grid management and listbox commands.
 N = tk.N
 S = tk.S
@@ -191,18 +200,18 @@ class QS(tk.Frame):
 
         self.parent.columnconfigure(0, weight=4)
         self.parent.rowconfigure(2, weight=4)
-        self.parent.config(bg='#666666')
+        self.parent.config(bg='#595959')
 
-        self.login_frame = tk.LabelFrame(parent, bg='#666666',
-                                         fg='#ffffff', text="Login",
+        self.login_frame = tk.LabelFrame(parent, bg='#595959',
+                                         fg='#f5f5f5', text="Login",
                                          pady=3, padx=3, relief=tk.FLAT)
-        self.search_frame = tk.LabelFrame(parent, bg='#666666',
-                                          fg='#ffffff', text="Search",
+        self.search_frame = tk.LabelFrame(parent, bg='#595959',
+                                          fg='#f5f5f5', text="Search",
                                           relief=tk.FLAT)
-        self.result_frame = tk.LabelFrame(parent, bg='#666666',
-                                          fg='#ffffff', text="Results",
+        self.result_frame = tk.LabelFrame(parent, bg='#595959',
+                                          fg='#f5f5f5', text="Results",
                                           padx=1, relief=tk.FLAT)
-        self.bottom_frame = tk.Frame(parent, bg='#666666')
+        self.bottom_frame = tk.Frame(parent, bg='#595959')
 
 #        self.login_frame.grid(row=0, sticky=W + E, padx=5, pady=10)
         self.search_frame.grid(row=1, sticky=W + E, padx=2, pady=2)
@@ -261,27 +270,27 @@ class QS(tk.Frame):
 
     def login_window(self):
         self.login = tk.Toplevel(self, width=250, height=250, padx=5,
-                                 pady=2, bg='#666666')
+                                 pady=5, bg='#595959')
         self.login.lift()
         self.login.title("CatDV QuickSearch Login")
-        self.login.config(bg='#666666')
-        self.login_fr = tk.Frame(self.login, padx=5, pady=5, bg='#666666')
+        self.login.config(bg='#595959')
+        self.login_fr = tk.Frame(self.login, padx=5, pady=5, bg='#595959')
 
         self.user_label = ttk.Label(self.login_fr, text="Username: ",
-                                    justify=tk.LEFT, background='#666666',
+                                    justify=tk.LEFT, background='#595959',
                                     foreground='#ffffff')
         self.user_entry = ttk.Entry(self.login_fr, textvariable=self.username)
         self.pwd_label = ttk.Label(self.login_fr, text="Password: ",
-                                   background='#666666', foreground='#ffffff')
+                                   background='#595959', foreground='#f5f5f5')
         self.pwd_entry = ttk.Entry(
             self.login_fr, textvariable=self.password, show="*",
             justify=tk.LEFT)
-        self.pwd_entry.bind("<Return>", enter_login)
+        self.pwd_entry.bind("<Return>", login_return)
         self.cancel_login_btn = ttk.Button(self.login_fr, text='cancel',
                                            command=self.login.destroy)
         self.u_login_btn = ttk.Button(self.login_fr, text="login",
-                                      command=c_login)
-        self.u_login_btn.bind("<Return>", enter_login)
+                                      command=login_btn_handlr)
+        #self.u_login_btn.bind("<Return>", enter_login)
 
         self.login_fr.grid()
         self.user_label.grid(row=0, column=0)
@@ -322,7 +331,7 @@ class QS(tk.Frame):
                                  height=2)
         self.result.config(font=m_font)
 
-        self.status_bar = tk.Label(self.parent, bg='#666666', fg='#ffffff',
+        self.status_bar = tk.Label(self.parent, bg='#595959', fg='#f5f5f5',
                                    textvariable=self.status, relief=tk.SUNKEN,
                                    anchor=W, justify=tk.LEFT)
 
@@ -440,6 +449,7 @@ class QS(tk.Frame):
 
     def on_exit(self):
         if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
+            delete_session()
             root.quit()
 
 
