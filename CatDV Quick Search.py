@@ -398,27 +398,46 @@ class QS(tk.Frame):
         """
         Users can change location address of the CatDV server
         """
-        self.s = tk.Toplevel(self, width=120, height=50, bg='gray93', padx=10,
+        self.s = tk.Toplevel(self, width=120, height=50, bg='#595959', padx=10,
                              pady=10)
 
-        self.settings_entry_frame = tk.Frame(self.s, bg='gray93', pady=3,
-                                             padx=3)
-        self.settings_btns_frame = tk.Frame(self.s, bg='gray93', pady=3,
+        self.settings_entry_frame = tk.Frame(self.s, bg='#595959', pady=1,
+                                             padx=1)
+        self.theme_change_frame = tk.Frame(self.s, bg='#595959',
+                                           pady=10, padx=10)
+        self.settings_btns_frame = tk.Frame(self.s, bg='#595959', pady=3,
                                             padx=3)
         self.settings_entry_frame.grid(row=0)
-        self.settings_btns_frame.grid(row=1)
+        self.theme_change_frame.grid(row=2)
+        self.settings_btns_frame.grid(row=3)
 
         self.s.wm_title("Settings")
+        self.theme_values = ['firebrick1', 'sea green', 'DodgerBlue4',
+                             'DarkGoldenrod1',
+                             'hot pink']
         self.server_address = ttk.Label(self.settings_entry_frame,
                                         text="Enter the full CatDV server "
                                              "Address including protocol"
                                              " and port number.\n\nExample:"
                                              " \'http://"
                                              "<ExampleDomainAddress>:8080\'\n",
-                                        width=100)
+                                        width=100,
+                                        background='#595959',
+                                        foreground='#f5f5f5')
         self.s_address_entry = ttk.Entry(self.settings_entry_frame,
                                          textvariable=self.cdv_server,
                                          width=100)
+        self.sep = ttk.Separator(self.s, orient='horizontal')
+        self.theme_lbl = tk.Label(self.theme_change_frame, text='Change '
+                                                                'theme '
+                                                                'colour:',
+                                  background='#595959', foreground='#f5f5f5')
+        self.choose_theme = tk.Spinbox(self.theme_change_frame,
+                                       values=self.theme_values)
+        self.save_theme = ttk.Button(self.theme_change_frame, text='Change '
+                                                                   'theme',
+                                     command=lambda: self.set_theme_colour(
+                                         self.choose_theme.get()))
         self.cancel_settings = ttk.Button(self.settings_btns_frame,
                                           text="Cancel",
                                           command=self.s.destroy)
@@ -428,6 +447,10 @@ class QS(tk.Frame):
 
         self.server_address.grid()
         self.s_address_entry.grid()
+        self.sep.grid(row=1, pady=20, sticky=E+W)
+        self.theme_lbl.grid(row=0, column=0)
+        self.choose_theme.grid(row=0, column=1)
+        self.save_theme.grid(row=0, column=2)
         self.cancel_settings.grid(row=0, column=0)
         self.confirm_setting.grid(row=0, column=1)
 
@@ -447,10 +470,32 @@ class QS(tk.Frame):
         self.status.set("Server address set to: {}".format(cdv.url))
         self.s.destroy()
 
+    def set_theme_colour(self, theme):
+        self.parent.config(bg='{}'.format(theme))
+        self.search_frame.config(bg='{}'.format(theme))
+        self.result_frame.config(bg='{}'.format(theme))
+        self.bottom_frame.config(bg='{}'.format(theme))
+
+        self.login.config(bg='{}'.format(theme))
+        self.login_fr.config(bg='{}'.format(theme))
+        self.user_label.config(background='{}'.format(theme))
+        self.pwd_label.config(background='{}'.format(theme))
+        self.result.config(bg='{}'.format(theme))
+        self.status_bar.config(bg='{}'.format(theme))
+        self.s.config(bg='{}'.format(theme))
+        self.settings_entry_frame.config(bg='{}'.format(theme))
+        self.theme_change_frame.config(bg='{}'.format(theme))
+        self.settings_btns_frame.config(bg='{}'.format(theme))
+        self.server_address.config(background='{}'.format(theme))
+        self.theme_lbl.config(background='{}'.format(theme))
+
     def on_exit(self):
         if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
-            delete_session()
-            root.quit()
+            try:
+                delete_session()
+                root.quit()
+            except:
+                root.quit()
 
 
 root = tk.Tk()
