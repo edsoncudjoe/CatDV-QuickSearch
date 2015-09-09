@@ -26,8 +26,10 @@ parse.read('./QuickSearchConf.ini')
 
 s_results = []
 cdv = Catdvlib()
-cdv.url = parse.get('url', 'url_address')
-
+try:
+    cdv.url = parse.get('url', 'url_address')
+except:
+    pass
 
 def c_login():
     """Login access to the CatDV database"""
@@ -228,11 +230,14 @@ class QS(tk.Frame):
         self.create_menubar()
         self.create_widgets()
         self.grid_widgets()
-
+        try:
+            self.set_theme_colour(parse.get('theme', 'colour'))
+        except:
+            logger.warning('Unable to set colour for main window. check '
+                           'config file')
+            pass
         self.s = ttk.Style()
         self.s.theme_use('default')
-        self.saved_color = None
-        self.theme_color = None # ?
 
     ######## MENU BAR #########
     def create_menubar(self):
@@ -418,7 +423,7 @@ class QS(tk.Frame):
         self.s.wm_title("Settings")
         self.theme_values = ['firebrick1', 'sea green', 'DodgerBlue4',
                              'DarkGoldenrod1',
-                             'hot pink']
+                             'hot pink', 'magenta4', 'DeepSkyBlue4', 'green4']
         self.server_address = ttk.Label(self.settings_entry_frame,
                                         text="Enter the full CatDV server "
                                              "Address including protocol"
@@ -439,7 +444,7 @@ class QS(tk.Frame):
         self.choose_theme = tk.Spinbox(self.theme_change_frame,
                                        values=self.theme_values)
         self.apply_theme = ttk.Button(self.settings_btns_frame, text='Apply',
-                                     command=lambda: self.set_theme_colour(
+                                     command=lambda: self.theme_colour_handle(
                                          self.choose_theme.get()))
         self.cancel_settings = ttk.Button(self.settings_btns_frame,
                                           text="Cancel",
@@ -458,6 +463,12 @@ class QS(tk.Frame):
         self.confirm_setting.grid(row=0, column=2)
 
         self.s_address_entry.bind('<Return>', self.save_settings_handle)
+        try:
+            self.set_settings_theme_colour(parse.get('theme', 'colour'))
+        except:
+            logger.warning('Unable to set colour for settings window. check '
+                           'config file')
+            pass
 
     def set_server_address(self):
         address = self.cdv_server.get()
@@ -473,23 +484,41 @@ class QS(tk.Frame):
 
     def set_theme_colour(self, theme):
         self.theme_color = theme
-        self.parent.config(bg='{}'.format(self.theme_color))
-        self.search_frame.config(bg='{}'.format(self.theme_color))
-        self.result_frame.config(bg='{}'.format(self.theme_color))
-        self.bottom_frame.config(bg='{}'.format(self.theme_color))
+        # Main window
+        try:
+            self.parent.config(bg='{}'.format(self.theme_color))
+            self.search_frame.config(bg='{}'.format(self.theme_color))
+            self.result_frame.config(bg='{}'.format(self.theme_color))
+            self.bottom_frame.config(bg='{}'.format(self.theme_color))
+            self.result.config(bg='{}'.format(self.theme_color))
+            self.status_bar.config(bg='{}'.format(self.theme_color))
 
-        self.login.config(bg='{}'.format(self.theme_color))
-        self.login_fr.config(bg='{}'.format(self.theme_color))
-        self.user_label.config(background='{}'.format(self.theme_color))
-        self.pwd_label.config(background='{}'.format(self.theme_color))
-        self.result.config(bg='{}'.format(self.theme_color))
-        self.status_bar.config(bg='{}'.format(self.theme_color))
-        self.s.config(bg='{}'.format(self.theme_color))
-        self.settings_entry_frame.config(bg='{}'.format(self.theme_color))
-        self.theme_change_frame.config(bg='{}'.format(self.theme_color))
-        self.settings_btns_frame.config(bg='{}'.format(self.theme_color))
-        self.server_address.config(background='{}'.format(self.theme_color))
-        self.theme_lbl.config(background='{}'.format(self.theme_color))
+            # Login window
+            self.login.config(bg='{}'.format(self.theme_color))
+            self.login_fr.config(bg='{}'.format(self.theme_color))
+            self.user_label.config(background='{}'.format(self.theme_color))
+            self.pwd_label.config(background='{}'.format(self.theme_color))
+        except Exception as e:
+            logger.warning(e)
+
+    def set_settings_theme_colour(self, theme):
+        """Set colour for the settings window"""
+        self.settings_theme_color = theme
+        self.s.config(bg='{}'.format(self.settings_theme_color))
+        self.settings_entry_frame.config(bg='{}'.format(
+            self.settings_theme_color))
+        self.theme_change_frame.config(bg='{}'.format(
+            self.settings_theme_color))
+        self.settings_btns_frame.config(bg='{}'.format(
+            self.settings_theme_color))
+        self.server_address.config(background='{}'.format(
+            self.settings_theme_color))
+        self.theme_lbl.config(background='{}'.format(
+            self.settings_theme_color))
+
+    def theme_colour_handle(self, theme):
+        self.set_theme_colour(theme)
+        self.set_settings_theme_colour(theme)
 
     def save_settings_handle(self, event):
         self.set_server_address()
