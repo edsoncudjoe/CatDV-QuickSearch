@@ -31,14 +31,28 @@ try:
 except:
     pass
 
+def set_auth(username, password):
+    api_auth = cdv.url + '/api/4/session?usr=' + username + '&pwd=' + password
+    return api_auth
+
 def c_login():
     """Login access to the CatDV database"""
+    connect_timeout = 0.1
     try:
         usr = app.username.get()
         pwd = app.password.get()
-        logger.info('Start access to CatDV API')
-        auth = cdv.set_auth(str(usr), str(pwd))
-        key = cdv.get_session_key()
+        auth = set_auth(str(usr), str(pwd))
+        print(auth)
+        logger.info('Start access to CatDV API: {}'.format(auth))
+
+        response = requests.get(auth, timeout=60.0)
+        status = response.status_code
+        keydata = json.loads(response.text)
+        key = keydata['data']['jsessionid']
+        # return self.key
+
+        # key = cdv.get_session_key()
+        print('key: {}'.format(key))
         if key:
             app.status.set("Login successful")
             logger.info('Login successful')
@@ -49,22 +63,22 @@ def c_login():
                                                 " details.\nPlease check and "
                                                 "try again.")
         logger.error('Incorrect user login', exc_info=True)
-    except requests.exceptions.ConnectTimeout as e:
-        tkMessageBox.showwarning("Server Error", "The server connection"
-                                                 " timed-out.")
-        logger.error('Server timed-out', exc_info=True)
-    except requests.exceptions.ConnectionError as e:
-        tkMessageBox.showwarning("Connection Error", '\nCan\'t access the API.'
-                                                     '\nPlease check if you '
-                                                     'have the right server '
-                                                     'address and if the '
-                                                     'CatDV server is working')
-        logger.error('Server possibly not connected.', exc_info=True)
+#    except requests.exceptions.ConnectTimeout as e:
+#        tkMessageBox.showwarning("Server Error", "The server connection"
+#                                                 " timed-out.")
+#        logger.error('Server timed-out', exc_info=True)
+#    except requests.exceptions.ConnectionError as e:
+#        tkMessageBox.showwarning("Connection Error", '\nCan\'t access the API.'
+#                                                     '\nPlease check if you '
+#                                                     'have the right server '
+#                                                     'address and if the '
+#                                                     'CatDV server is working')
+#        logger.error('Server possibly not connected.', exc_info=True)
     except Exception, e:
         tkMessageBox.showwarning("", "There was an error accessing the CatDV"
                                      " Server.")
+        print(e)
         logger.error('Server error', exc_info=True)
-
 
 def query():
     count = 0
@@ -473,7 +487,8 @@ class QS(tk.Frame):
     def set_server_address(self):
         address = self.cdv_server.get()
         if address.startswith('http://') or address.startswith('https://'):
-            cdv.url = address + "/api/4" # possible move
+            # cdv.url = address + "/api/4" # possible move
+            cdv.url = address
         else:
             tkMessageBox.showwarning("", "Server address should start with"
                                          " \'http://\' or \'https://\'")
@@ -527,9 +542,12 @@ class QS(tk.Frame):
     def save_settings(self):
         self.set_server_address()
         self.conf = open('./QuickSearchConf.ini', 'w')
-        Settings.add_section('theme')
+        try:
+            Settings.add_section('theme')
+            Settings.add_section('url')
+        except Exception as e:
+            logger.info(e)
         Settings.set('theme', 'colour', self.theme_color)
-        Settings.add_section('url')
         Settings.set('url', 'url_address', cdv.url)
         Settings.write(self.conf)
         self.conf.close()
@@ -540,9 +558,9 @@ class QS(tk.Frame):
         if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
             try:
                 delete_session()
-                root.quit()
+                root.destroy()
             except:
-                root.quit()
+                root.destroy()
 
 
 root = tk.Tk()
