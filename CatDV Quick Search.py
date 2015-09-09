@@ -20,13 +20,14 @@ logging.basicConfig(filename='CDVQsErr.log', level=logging.DEBUG,
                     datefmt='%d/%m/%Y %I:%M:%S %p')
 logger = logging.getLogger(__name__)
 
-s_results = []
-cdv = Catdvlib()
-cdv.url = url
-
 Settings = ConfigParser.ConfigParser()
 parse = ConfigParser.SafeConfigParser()
 parse.read('./QuickSearchConf.ini')
+
+s_results = []
+cdv = Catdvlib()
+cdv.url = parse.get('url', 'url_address')
+
 
 def c_login():
     """Login access to the CatDV database"""
@@ -170,8 +171,7 @@ def search_btn_return(event):
     query()
 
 
-def settings_btn_return(event):
-    app.set_server_address()
+
 
 
 def login_btn_handlr():
@@ -217,7 +217,6 @@ class QS(tk.Frame):
                                           padx=1, relief=tk.FLAT)
         self.bottom_frame = tk.Frame(parent, bg='#595959')
 
-#        self.login_frame.grid(row=0, sticky=W + E, padx=5, pady=10)
         self.search_frame.grid(row=1, sticky=W + E, padx=2, pady=2)
         self.result_frame.grid(row=2, sticky=N + S + W + E, padx=5, pady=2)
         self.bottom_frame.grid(row=3, sticky=S + E, padx=5, pady=2)
@@ -232,6 +231,8 @@ class QS(tk.Frame):
 
         self.s = ttk.Style()
         self.s.theme_use('default')
+        self.saved_color = None
+        self.theme_color = None # ?
 
     ######## MENU BAR #########
     def create_menubar(self):
@@ -294,7 +295,6 @@ class QS(tk.Frame):
                                            command=self.login.destroy)
         self.u_login_btn = ttk.Button(self.login_fr, text="login",
                                       command=login_btn_handlr)
-        #self.u_login_btn.bind("<Return>", enter_login)
 
         self.login_fr.grid()
         self.user_label.grid(row=0, column=0)
@@ -438,8 +438,7 @@ class QS(tk.Frame):
                                   background='#595959', foreground='#f5f5f5')
         self.choose_theme = tk.Spinbox(self.theme_change_frame,
                                        values=self.theme_values)
-        self.save_theme = ttk.Button(self.theme_change_frame, text='Change '
-                                                                   'theme',
+        self.apply_theme = ttk.Button(self.settings_btns_frame, text='Apply',
                                      command=lambda: self.set_theme_colour(
                                          self.choose_theme.get()))
         self.cancel_settings = ttk.Button(self.settings_btns_frame,
@@ -447,25 +446,23 @@ class QS(tk.Frame):
                                           command=self.s.destroy)
         self.confirm_setting = ttk.Button(self.settings_btns_frame,
                                           text="OK",
-                                          command=self.set_server_address)
+                                          command=self.save_settings)
 
         self.server_address.grid()
         self.s_address_entry.grid()
         self.sep.grid(row=1, pady=20, sticky=E+W)
         self.theme_lbl.grid(row=0, column=0)
         self.choose_theme.grid(row=0, column=1)
-        self.save_theme.grid(row=0, column=2)
+        self.apply_theme.grid(row=0, column=1)
         self.cancel_settings.grid(row=0, column=0)
-        self.confirm_setting.grid(row=0, column=1)
+        self.confirm_setting.grid(row=0, column=2)
 
-        self.s_address_entry.bind('<Return>', settings_btn_return)
+        self.s_address_entry.bind('<Return>', self.save_settings_handle)
 
     def set_server_address(self):
         address = self.cdv_server.get()
         if address.startswith('http://') or address.startswith('https://'):
-            cdv.url = address + "/api/4"
-            with open('settings.py', 'w') as set_server:
-                set_server.write("url = '{}/api/4'".format(address))
+            cdv.url = address + "/api/4" # possible move
         else:
             tkMessageBox.showwarning("", "Server address should start with"
                                          " \'http://\' or \'https://\'")
@@ -475,23 +472,40 @@ class QS(tk.Frame):
         self.s.destroy()
 
     def set_theme_colour(self, theme):
-        self.parent.config(bg='{}'.format(theme))
-        self.search_frame.config(bg='{}'.format(theme))
-        self.result_frame.config(bg='{}'.format(theme))
-        self.bottom_frame.config(bg='{}'.format(theme))
+        self.theme_color = theme
+        self.parent.config(bg='{}'.format(self.theme_color))
+        self.search_frame.config(bg='{}'.format(self.theme_color))
+        self.result_frame.config(bg='{}'.format(self.theme_color))
+        self.bottom_frame.config(bg='{}'.format(self.theme_color))
 
-        self.login.config(bg='{}'.format(theme))
-        self.login_fr.config(bg='{}'.format(theme))
-        self.user_label.config(background='{}'.format(theme))
-        self.pwd_label.config(background='{}'.format(theme))
-        self.result.config(bg='{}'.format(theme))
-        self.status_bar.config(bg='{}'.format(theme))
-        self.s.config(bg='{}'.format(theme))
-        self.settings_entry_frame.config(bg='{}'.format(theme))
-        self.theme_change_frame.config(bg='{}'.format(theme))
-        self.settings_btns_frame.config(bg='{}'.format(theme))
-        self.server_address.config(background='{}'.format(theme))
-        self.theme_lbl.config(background='{}'.format(theme))
+        self.login.config(bg='{}'.format(self.theme_color))
+        self.login_fr.config(bg='{}'.format(self.theme_color))
+        self.user_label.config(background='{}'.format(self.theme_color))
+        self.pwd_label.config(background='{}'.format(self.theme_color))
+        self.result.config(bg='{}'.format(self.theme_color))
+        self.status_bar.config(bg='{}'.format(self.theme_color))
+        self.s.config(bg='{}'.format(self.theme_color))
+        self.settings_entry_frame.config(bg='{}'.format(self.theme_color))
+        self.theme_change_frame.config(bg='{}'.format(self.theme_color))
+        self.settings_btns_frame.config(bg='{}'.format(self.theme_color))
+        self.server_address.config(background='{}'.format(self.theme_color))
+        self.theme_lbl.config(background='{}'.format(self.theme_color))
+
+    def save_settings_handle(self, event):
+        self.set_server_address()
+        self.save_settings()
+
+    def save_settings(self):
+        self.set_server_address()
+        self.conf = open('./QuickSearchConf.ini', 'w')
+        Settings.add_section('theme')
+        Settings.set('theme', 'colour', self.theme_color)
+        Settings.add_section('url')
+        Settings.set('url', 'url_address', cdv.url)
+        Settings.write(self.conf)
+        self.conf.close()
+        self.s.destroy()
+
 
     def on_exit(self):
         if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):

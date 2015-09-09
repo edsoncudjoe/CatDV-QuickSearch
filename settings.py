@@ -1,3 +1,1 @@
-url = 'http://192.168.0.101:8080/api/4'
-
-app_color = None
+url = 'http://192.168.0.101:8080/api/4/api/4'
