@@ -1,3 +1,4 @@
+import ConfigParser
 import sys
 import Tkinter as tk
 import ttk
@@ -23,6 +24,9 @@ s_results = []
 cdv = Catdvlib()
 cdv.url = url
 
+Settings = ConfigParser.ConfigParser()
+parse = ConfigParser.SafeConfigParser()
+parse.read('./QuickSearchConf.ini')
 
 def c_login():
     """Login access to the CatDV database"""
