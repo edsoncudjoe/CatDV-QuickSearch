@@ -9,7 +9,7 @@ import logging
 import threading
 import tkFont
 import tkFileDialog
-from settings import url
+
 
 sys.path.insert(0, '../py-catdv')  # IV local
 sys.path.insert(0, '../Py-CatDV')
@@ -39,9 +39,7 @@ def c_login():
         pwd = app.password.get()
         logger.info('Start access to CatDV API')
         auth = cdv.set_auth(str(usr), str(pwd))
-        # print(auth)
         key = cdv.get_session_key()
-        # print('key: {}'.format(key))
         if key:
             app.status.set("Login successful")
             logger.info('Login successful')
@@ -74,7 +72,6 @@ def query():
     entry = str(app.term.get())
     if entry:
         try:
-            # print('cdv.key: {}'.format(cdv.key))
             res = requests.get(
                 cdv.url + '/api/' + API_VERS + '/clips;jsessionid=' +
                 cdv.key + '?filter=and((clip.name)like({}))'
@@ -116,7 +113,6 @@ def query():
     else:
         tkMessageBox.showwarning("", "Enter name of the title in the "
                                      "search bar")
-
 
 
 def enter_query(event):
