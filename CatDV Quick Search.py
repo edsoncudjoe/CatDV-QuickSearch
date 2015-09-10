@@ -32,6 +32,7 @@ try:
 except:
     pass
 
+
 def c_login():
     """Login access to the CatDV database"""
     try:
@@ -67,6 +68,14 @@ def c_login():
         logger.error('Server error', exc_info=True)
 
 
+def sizeof_fmt(num, suffix='B'):
+    for unit in ['','K','M','G','T','P','E','Z']:
+        if abs(num) < 1024.0:
+            return "%3.1f%s%s" % (num, unit, suffix)
+        num /= 1024.0
+    return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
 def query():
     count = 0
     entry = str(app.term.get())
@@ -83,18 +92,22 @@ def query():
                     if i['userFields']['U7']:
                         count += 1
                         if i['notes']:
+                            size = sizeof_fmt(i['media']['fileSize'])
                             s_results.append((i['userFields']['U7'],
-                                              i['name'], i['notes']))
+                                              i['name'], size, i['notes']))
                             app.tree.insert("", count, text=str(count),
                                             values=(i['userFields']['U7'],
                                                     i['name'],
+                                                    size,
                                                     i['notes']),)
                         else:
+                            size = sizeof_fmt(i['media']['fileSize'])
                             s_results.append((i['userFields']['U7'],
-                                              i['name']))
+                                              i['name'], size))
                             app.tree.insert("", count, text=str(count),
                                             values=(i['userFields']['U7'],
-                                                    i['name']),)
+                                                    i['name'],
+                                                    size),)
                     else:
                         count += 1
                         app.result.insert(END, i['name'])
@@ -173,12 +186,10 @@ def search_btn_return(event):
     query()
 
 
-
-
-
 def login_btn_handlr():
     c_login()
     app.login.destroy()
+
 
 def login_return(event):
     c_login()
@@ -345,7 +356,7 @@ class QS(tk.Frame):
                                    anchor=W, justify=tk.LEFT)
 
         # Treeview
-        self.columns = ('IV Number', 'Filename', 'Notes')
+        self.columns = ('IV Number', 'Filename', 'Size', 'Notes')
         self.tree = ttk.Treeview(self.result_frame, columns=self.columns,
                                  height=15, selectmode="browse")
         for col in self.columns:
@@ -354,12 +365,15 @@ class QS(tk.Frame):
         self.tree.column("#0", width=50)
         self.tree.column("IV Number", width=120)
         self.tree.column("Filename", width=800)
+        self.tree.column("Size", width=100)
         self.tree.column("Notes", width=300)
 
         self.tree.heading("IV Number", command=lambda: self.treeview_sort(
             self.tree, "IV Number", False))
         self.tree.heading("Filename", command=lambda: self.treeview_sort(
             self.tree, "Filename", False))
+        self.tree.heading("Size", command=lambda: self.treeview_sort(
+            self.tree, "Size", False))
         self.tree.heading("Notes", command=lambda: self.treeview_sort(
             self.tree, "Notes", False))
 
