@@ -26,6 +26,7 @@ parse.read('./QuickSearchConf.ini')
 
 s_results = []
 cdv = Catdvlib()
+API_VERS = '4'
 try:
     cdv.url = parse.get('url', 'url_address')
 except:
@@ -38,7 +39,9 @@ def c_login():
         pwd = app.password.get()
         logger.info('Start access to CatDV API')
         auth = cdv.set_auth(str(usr), str(pwd))
+        # print(auth)
         key = cdv.get_session_key()
+        # print('key: {}'.format(key))
         if key:
             app.status.set("Login successful")
             logger.info('Login successful')
@@ -71,10 +74,11 @@ def query():
     entry = str(app.term.get())
     if entry:
         try:
+            # print('cdv.key: {}'.format(cdv.key))
             res = requests.get(
-                cdv.url + "/clips;jsessionid=" + cdv.key +
-                               "?filter=and((clip.name)like({}))"
-                               "&include=userFields".format(entry))
+                cdv.url + '/api/' + API_VERS + '/clips;jsessionid=' +
+                cdv.key + '?filter=and((clip.name)like({}))'
+                               '&include=userFields'.format(entry))
             data = json.loads(res.text)
             clear_text()
             for i in data['data']['items']:
@@ -472,12 +476,15 @@ class QS(tk.Frame):
 
     def set_server_address(self):
         address = self.cdv_server.get()
-        if address.startswith('http://') or address.startswith('https://'):
-            cdv.url = address + "/api/4" # possible move
-        else:
-            tkMessageBox.showwarning("", "Server address should start with"
+        if address != '':
+            if address.startswith('http://') or address.startswith('https://'):
+                cdv.url = address
+            else:
+                tkMessageBox.showwarning("", "Server address should start with"
                                          " \'http://\' or \'https://\'")
-        logger.info("Server url changed to {}".format(cdv.url))
+            logger.info("Server url changed to {}".format(cdv.url))
+        else:
+            pass
 
         self.status.set("Server address set to: {}".format(cdv.url))
         self.s.destroy()
