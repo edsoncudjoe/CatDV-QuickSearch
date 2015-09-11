@@ -22,14 +22,22 @@ logger = logging.getLogger(__name__)
 
 Settings = ConfigParser.ConfigParser()
 parse = ConfigParser.SafeConfigParser()
-parse.read('./QuickSearchConf.ini')
 
 s_results = []
 cdv = Catdvlib()
 API_VERS = '4'
+
+config = './QuickSearchConf.ini'
 try:
-    cdv.url = parse.get('url', 'url_address')
-except:
+    parse.readfp(open(config))
+except IOError:
+    pass
+
+try:
+    server_url = parse.get('url', 'url_address')
+    print server_url
+    cdv.url = server_url
+except ConfigParser.NoSectionError:
     pass
 
 
@@ -436,7 +444,7 @@ class QS(tk.Frame):
 
         self.s.wm_title("Settings")
         self.theme_values = ['firebrick1', 'sea green', 'DodgerBlue4',
-                             'DarkGoldenrod1',
+                             'DarkGoldenrod1', 'gray83',
                              'hot pink', 'magenta4', 'DeepSkyBlue4', 'green4']
         self.server_address = ttk.Label(self.settings_entry_frame,
                                         text="Enter the full CatDV server "
@@ -515,6 +523,16 @@ class QS(tk.Frame):
             self.login_fr.config(bg='{}'.format(self.theme_color))
             self.user_label.config(background='{}'.format(self.theme_color))
             self.pwd_label.config(background='{}'.format(self.theme_color))
+            if self.theme_color == 'gray83':
+                self.user_label.config(foreground='black')
+                self.pwd_label.config(foreground='black')
+                # self.usrname_label.config(foreground='black')
+                # self.password_label.config(foreground='black')
+                # self.login_frame.config(foreground='black')
+                self.search_frame.config(foreground='black')
+                self.result_frame.config(foreground='black')
+                self.bottom_frame.config(foreground='black')
+                self.status_bar.configure(fg='black')
         except Exception as e:
             logger.warning(e)
 
@@ -532,6 +550,9 @@ class QS(tk.Frame):
             self.settings_theme_color))
         self.theme_lbl.config(background='{}'.format(
             self.settings_theme_color))
+        if self.settings_theme_color == 'gray83':
+            self.server_address.config(foreground='black')
+            self.theme_lbl.config(foreground='black')
 
     def theme_colour_handle(self, theme):
         self.set_theme_colour(theme)
@@ -551,7 +572,6 @@ class QS(tk.Frame):
         Settings.write(self.conf)
         self.conf.close()
         self.s.destroy()
-
 
     def on_exit(self):
         if tkMessageBox.askokcancel("Quit", "Do you really wish to quit?"):
