@@ -8,7 +8,6 @@ the search query, storage tape information and the
 files size. The program can also output results as a
 text file.
 
-
 ============
 Requirements
 ============
@@ -24,23 +23,23 @@ CatDVlib module is needed for access to the CatDV api and
 to store the session key.
 https://github.com/edsoncudjoe/Py-CatDV
 
-
 ============
 Installation
 ============
-Currently available for OSX 10.6+. An .app file is available.
-The 'CatDV Quick Search.py' file can be launched from the terminal.
+A .app file is currently available for OSX 10.6+. 
 
+The 'CatDV Quick Search.py' file can be launched from the terminal.
 
 ===========
 Maintainers
 ===========
 Edson Cudjoe
 
-
 =====
 To Do
 =====
 Update to Python3
+
 Add shortcuts
+
 Output search info to spreadsheet data
