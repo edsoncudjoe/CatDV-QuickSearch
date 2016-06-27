@@ -91,8 +91,9 @@ def query():
         try:
             res = requests.get(
                 cdv.url + '/api/' + API_VERS + '/clips;jsessionid=' +
-                cdv.key + '?filter=and((clip.name)like({}))'
-                               '&include=userFields'.format(entry))
+                cdv.key + '?filter=or((clip.name)like({0}))or(('
+                          'clip.userFields[U7])like({0}))'
+                          '&include=userFields'.format(entry))
             data = json.loads(res.text)
             clear_text()
             for i in data['data']['items']:
