@@ -9,13 +9,16 @@ from setuptools import setup
 
 APP = ['CatDV Quick Search.py']
 DATA_FILES = []
-OPTIONS = {'argv_emulation': True}
+OPTIONS = {
+    'argv_emulation': True,
+    'iconfile': 'white-search.icns'
+}
 
 setup(
     app=APP,
     name='CatDV Quick Search',
     description='Find clips stored on the CatDV database',
-    version='1.6',
+    version='1.6.1',
     date='11-Sep-2015',
     author='Edson Cudjoe',
     author_email='e.cudjoe@hotmail.co.uk',
