@@ -24,7 +24,6 @@ Settings = ConfigParser.ConfigParser()
 parse = ConfigParser.SafeConfigParser()
 
 s_results = []
-cdv = Catdvlib()
 API_VERS = '4'
 
 config = './QuickSearchConf.ini'
@@ -35,7 +34,8 @@ except IOError:
 
 try:
     server_url = parse.get('url', 'url_address')
-    print server_url
+    print('Server URL: {}'.format(server_url))
+    cdv = Catdvlib(server_url=server_url, api_vers=API_VERS)
     cdv.url = server_url
 except ConfigParser.NoSectionError:
     pass
@@ -51,7 +51,7 @@ def c_login():
         key = cdv.get_session_key()
         if key:
             app.status.set("Login successful")
-            logger.info('Login successful')
+            logger.info('Login successful: KEY: {}'.format(cdv.key))
         else:
             raise TypeError
     except TypeError:
@@ -90,10 +90,10 @@ def query():
     if entry:
         try:
             res = requests.get(
-                cdv.url + '/api/' + API_VERS + '/clips;jsessionid=' +
-                cdv.key + '?filter=or((clip.name)like({0}))or(('
-                          'clip.userFields[U7])like({0}))'
-                          '&include=userFields'.format(entry))
+                'http://192.168.0.101:8080/api/4/clips;jsessionid=' + cdv.key +
+                '?filter=or((clip.name)like({0}))or'
+                '((clip.userFields[U7])like({0}))or'
+                '((clip.clipref)like({0}))&include=userFields'.format(entry))
             data = json.loads(res.text)
             clear_text()
             for i in data['data']['items']:
@@ -102,20 +102,26 @@ def query():
                         count += 1
                         if i['notes']:
                             size = sizeof_fmt(i['media']['fileSize'])
-                            s_results.append((i['userFields']['U7'],
-                                              i['name'], size, i['notes']))
+                            s_results.append((i['clipref'],
+                                              i['name'],
+                                              i['userFields']['U7'],
+                                              size, i['notes']))
                             app.tree.insert("", count, text=str(count),
-                                            values=(i['userFields']['U7'],
+                                            values=(i['clipref'],
                                                     i['name'],
+                                                    i['userFields']['U7'],
                                                     size,
                                                     i['notes']),)
                         else:
                             size = sizeof_fmt(i['media']['fileSize'])
-                            s_results.append((i['userFields']['U7'],
-                                              i['name'], size))
+                            s_results.append((i['clipref'],
+                                              i['name'],
+                                              i['userFields']['U7'],
+                                              size))
                             app.tree.insert("", count, text=str(count),
-                                            values=(i['userFields']['U7'],
+                                            values=(i['clipref'],
                                                     i['name'],
+                                                    i['userFields']['U7'],
                                                     size),)
                     else:
                         count += 1
@@ -365,22 +371,24 @@ class QS(tk.Frame):
                                    anchor=W, justify=tk.LEFT)
 
         # Treeview
-        self.columns = ('IV Number', 'Filename', 'Size', 'Notes')
+        self.columns = ('Clip ID', 'Filename', 'IV Number', 'Size', 'Notes')
         self.tree = ttk.Treeview(self.result_frame, columns=self.columns,
                                  height=15, selectmode="browse")
         for col in self.columns:
             self.tree.heading(col, text=col)
 
         self.tree.column("#0", width=50)
-        self.tree.column("IV Number", width=120)
+        self.tree.column("Clip ID", width=120)
         self.tree.column("Filename", width=800)
+        self.tree.column("IV Number", width=140)
         self.tree.column("Size", width=100)
-        self.tree.column("Notes", width=300)
+        self.tree.column("Notes", width=250)
 
-        self.tree.heading("IV Number", command=lambda: self.treeview_sort(
-            self.tree, "IV Number", False))
+        self.tree.heading("Clip ID")
         self.tree.heading("Filename", command=lambda: self.treeview_sort(
             self.tree, "Filename", False))
+        self.tree.heading("IV Number", command=lambda: self.treeview_sort(
+            self.tree, "IV Number", False))
         self.tree.heading("Size", command=lambda: self.treeview_sort(
             self.tree, "Size", False))
         self.tree.heading("Notes", command=lambda: self.treeview_sort(
