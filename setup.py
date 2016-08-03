@@ -17,8 +17,8 @@ OPTIONS = {
 setup(
     app=APP,
     name='CatDV Quick Search',
-    description='Find clips stored on the CatDV database',
-    version='1.6.1',
+    description='CatDV Database Search Tool',
+    version='1.6.2',
     date='11-Sep-2015',
     author='Edson Cudjoe',
     author_email='e.cudjoe@hotmail.co.uk',

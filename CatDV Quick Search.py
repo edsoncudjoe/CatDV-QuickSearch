@@ -25,6 +25,7 @@ parse = ConfigParser.SafeConfigParser()
 
 s_results = []
 API_VERS = '4'
+cdv = Catdvlib(server_url='http://192.168.0.101:8080', api_vers=API_VERS)
 
 config = './QuickSearchConf.ini'
 try:
@@ -35,7 +36,6 @@ except IOError:
 try:
     server_url = parse.get('url', 'url_address')
     print('Server URL: {}'.format(server_url))
-    cdv = Catdvlib(server_url=server_url, api_vers=API_VERS)
     cdv.url = server_url
 except ConfigParser.NoSectionError:
     pass
